@@ -19,7 +19,7 @@ class MandelbrotWidget : public QWidget
 public:
 	MandelbrotWidget(QWidget *parent = nullptr): QWidget(parent)
 	{
-		resize(1200, 960);
+		resize(120, 96);
 		 // QTimer *timer = new QTimer(this);
 		 // connect(timer, SIGNAL(timeout()), this, SLOT(repaint()));
 		 // timer->start(1000 / 60);
@@ -56,6 +56,35 @@ protected:
 		painter.drawPixmap(0, 0, pixmap);
 	}
 private:
+	int maxiter = 50;
+	QColor getColor(int iteration)
+	{
+		if(iteration < maxiter)
+		{
+			int color = iteration % 16;
+		    QColor mapping[16];
+		    mapping[0].setRgb(66, 30, 15);
+		    mapping[1].setRgb(25, 7, 26);
+		    mapping[2].setRgb(9, 1, 47);
+		    mapping[3].setRgb(4, 4, 73);
+		    mapping[4].setRgb(0, 7, 100);
+		    mapping[5].setRgb(12, 44, 138);
+		    mapping[6].setRgb(24, 82, 177);
+		    mapping[7].setRgb(57, 125, 209);
+		    mapping[8].setRgb(134, 181, 229);
+		    mapping[9].setRgb(211, 236, 248);
+		    mapping[10].setRgb(241, 233, 191);
+		    mapping[11].setRgb(248, 201, 95);
+		    mapping[12].setRgb(255, 170, 0);
+		    mapping[13].setRgb(204, 128, 0);
+		    mapping[14].setRgb(153, 87, 0);
+		    mapping[15].setRgb(106, 52, 3);
+			// std::cout << "INSIDE: " << c_re << " + " << c_im << "i   " << color << std::endl;
+			// img.setPixelColor(x, y, Qt::white);
+			return mapping[color];
+		}
+		return Qt::white;
+	}
 	QImage mandelbrot()
 	{
 		int w = width();
@@ -75,27 +104,19 @@ private:
 				double Z_re = c_re;
 				double Z_im = c_im;
 				bool is_inside = true;
-				for(int i=0; i<50; i++)
+				int i{0};
+				for(i=0; i<maxiter; i++)
 				{
 					if(Z_re*Z_re + Z_im*Z_im > 4)
 					{
-						is_inside = false;
 						break;
 					}
 					double Z_im2 = Z_im * Z_im;
 					Z_im = 2 * Z_re * Z_im + c_im;
 					Z_re = Z_re * Z_re - Z_im2 + c_re;
 				}
-				if(is_inside)
-				{
-					// std::cout << "INSIDE: " << c_re << " + " << c_im << "i" << std::endl;
-					img.setPixelColor(x, y, QColor(200, 0, 0));
-				}
-				else
-				{
-					// std::cout << "OUTSIDE: " << c_re << " + " << c_im << "i" << std::endl;
-					img.setPixelColor(x, y, QColor(0, 200, 0));
-				}
+				QColor color = getColor(i);
+				img.setPixelColor(x, y, color);
 			}
 		}
 		return img;
