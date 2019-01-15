@@ -3,6 +3,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <cmath>
 
 #include <QWidget>
 #include <QPainter>
@@ -10,6 +11,9 @@
 #include <QPixmap>
 #include <QColor>
 #include <QTimer>
+#include <QApplication>
+#include <QKeyEvent>
+#include <QFont>
 
 
 class MandelbrotWidget : public QWidget
@@ -19,68 +23,139 @@ class MandelbrotWidget : public QWidget
 public:
 	MandelbrotWidget(QWidget *parent = nullptr): QWidget(parent)
 	{
-		resize(120, 96);
+		// QScreen *screen = QGuiApplication::primaryScreen();
+		// QRect  screenGeometry = screen->geometry();
+		// int height = screenGeometry.height();
+		// int width = screenGeometry.width();
+		// resize(height, width);
 		 // QTimer *timer = new QTimer(this);
 		 // connect(timer, SIGNAL(timeout()), this, SLOT(repaint()));
 		 // timer->start(1000 / 60);
 	}
 
 protected:
+	void keyPressEvent(QKeyEvent* event) override {
+		if (event->key() == Qt::Key_Escape)
+		{	
+			QApplication::quit();
+		}
+		else if(event->key() == Qt::Key_Plus)
+		{
+			zoom(re_min, re_max, zf);
+			zoom(im_min, im_max, zf);
+			repaint();
+		}
+		else if(event->key() == Qt::Key_Minus)
+		{
+			zoom(re_min, re_max, izf);
+			zoom(im_min, im_max, izf);;
+			repaint();
+		}
+		else if(event->key() == Qt::Key_W)
+		{
+
+			im_min += 0.1 * (im_max - im_min);
+			im_max += 0.1 * (im_max - im_min);
+			repaint();			
+		}
+		else if(event->key() == Qt::Key_A)
+		{
+			re_min -= 0.1 * (re_max - re_min);
+			re_max -= 0.1 * (re_max - re_min);
+			repaint();
+		}
+		else if(event->key() == Qt::Key_S)
+		{
+			im_min -= 0.1 * (im_max - im_min);
+			im_max -= 0.1 * (im_max - im_min);
+			repaint();
+		}
+		else if(event->key() == Qt::Key_D)
+		{
+			re_min += 0.1 * (re_max - re_min);
+			re_max += 0.1 * (re_max - re_min);
+			repaint();
+		}
+		else if(event->key() == Qt::Key_Up)
+		{
+			maxiter += 10;
+		}
+		else if(event->key() == Qt::Key_Down)
+		{
+			maxiter -= 10;
+		}
+		else if(event->key() == Qt::Key_Return)
+		{
+			std::cout << "ENTER\n";
+			repaint();
+		}
+	}
 	void paintEvent(QPaintEvent * event)
 	{
 		QPainter painter(this);
-		// painter.fillRect(rect(), Qt::black);
 
 		// faster to display
 		QPixmap pixmap;
 
-		// Allows pixel access
-		// QImage img(width(), height(), QImage::Format_RGB888);
-		// for(int w=0; w<width(); w++)
-		// {
-		// 	for(int h=0; h<height(); h++)
-		// 	{
-		// 		auto p = std::chrono::system_clock::now();
-		// 		auto duration_in_seconds = std::chrono::duration<double>(p.time_since_epoch());
-		// 		double seconds = duration_in_seconds.count() + 0.5;
-		// 		int s = (int) seconds;
-		// 		img.setPixelColor (
-		// 			w, h,
-		// 			QColor((w + s) % 255,
-		// 				   (h + s) % 255,
-		// 				   (w * h + s) % 255));
-		// 	}
-		// }
-
 		pixmap = QPixmap::fromImage(mandelbrot());
 		painter.drawPixmap(0, 0, pixmap);
+		painter.setFont(QFont("times",28));
+		painter.setPen(Qt::red);
+
+		painter.drawText(rect(), Qt::AlignTop | Qt::AlignHCenter, QString::number(im_max));
+		painter.drawText(rect(), Qt::AlignBottom | Qt::AlignHCenter, QString::number(im_min));
+		painter.drawText(rect(), Qt::AlignLeft | Qt::AlignVCenter, QString::number(re_min));
+		painter.drawText(rect(), Qt::AlignRight | Qt::AlignVCenter, QString::number(re_max));
+		painter.drawText(rect(), Qt::AlignRight | Qt::AlignTop, QString::number(maxiter));
+		painter.drawText(rect(), Qt::AlignCenter, tr("O"));
 	}
 private:
-	int maxiter = 50;
+	// double zf = 0.5;
+	double zf = 0.7;
+	// double izf = 2;
+	double izf = 1.4285714285714286;
+	int maxiter = 20;
+	double re_min{-2}, re_max{1.0};
+	double im_min{-1.2}, im_max{1.2};
+	void zoom(double &minimum, double &maximum, double zf)
+	{
+		double diff = maximum - minimum;
+		double diff_new = diff * zf;
+		double add = (diff - diff_new) * 0.5;
+		minimum += add;
+		maximum -= add;
+	}
 	QColor getColor(int iteration)
 	{
 		if(iteration < maxiter)
 		{
+			// int i = (int) (iteration * 255*255*255) / maxiter;
+			// i = iteration;
+			// int R = (i & 0x000000FF);
+			// int G = (i & 0x0000FF00) >> 8;
+			// int B = (i & 0x00FF0000) >> 16;
+			// int A = (i & 0xFF000000) >> 24;
+			// return QColor(R,G,B,A);
+
 			int color = iteration % 16;
+			int a = iteration % 255;
 		    QColor mapping[16];
-		    mapping[0].setRgb(66, 30, 15);
-		    mapping[1].setRgb(25, 7, 26);
-		    mapping[2].setRgb(9, 1, 47);
-		    mapping[3].setRgb(4, 4, 73);
-		    mapping[4].setRgb(0, 7, 100);
-		    mapping[5].setRgb(12, 44, 138);
-		    mapping[6].setRgb(24, 82, 177);
-		    mapping[7].setRgb(57, 125, 209);
-		    mapping[8].setRgb(134, 181, 229);
-		    mapping[9].setRgb(211, 236, 248);
+		    mapping[0].setRgb( 66,  30,  15 );
+		    mapping[1].setRgb( 25,  7,   26 );
+		    mapping[2].setRgb( 9,   1,   47 );
+		    mapping[3].setRgb( 4,   4,   73 );
+		    mapping[4].setRgb( 0,   7,   100);
+		    mapping[5].setRgb( 12,  44,  138);
+		    mapping[6].setRgb( 24,  82,  177);
+		    mapping[7].setRgb( 57,  125, 209);
+		    mapping[8].setRgb( 134, 181, 229);
+		    mapping[9].setRgb( 211, 236, 248);
 		    mapping[10].setRgb(241, 233, 191);
-		    mapping[11].setRgb(248, 201, 95);
-		    mapping[12].setRgb(255, 170, 0);
-		    mapping[13].setRgb(204, 128, 0);
-		    mapping[14].setRgb(153, 87, 0);
-		    mapping[15].setRgb(106, 52, 3);
-			// std::cout << "INSIDE: " << c_re << " + " << c_im << "i   " << color << std::endl;
-			// img.setPixelColor(x, y, Qt::white);
+		    mapping[11].setRgb(248, 201, 95 );
+		    mapping[12].setRgb(255, 170, 0  );
+		    mapping[13].setRgb(204, 128, 0  );
+		    mapping[14].setRgb(153, 87,  0  );
+		    mapping[15].setRgb(106, 52,  3  );
 			return mapping[color];
 		}
 		return Qt::white;
@@ -89,9 +164,6 @@ private:
 	{
 		int w = width();
 		int h = height();
-
-		double re_min{-2.0}, re_max{1.0};
-		double im_min{-1.2}, im_max{1.2};
 
 		QImage img(w, h, QImage::Format_RGB888);
 

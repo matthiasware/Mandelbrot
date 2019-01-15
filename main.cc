@@ -6,7 +6,7 @@ int main(int argc, char** argv){
 	QApplication application(argc,argv);
 
 	MandelbrotWidget widget {};
-	widget.show();
+	widget.showMaximized();
 
 	return application.exec();
 }
