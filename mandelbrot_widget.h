@@ -97,28 +97,60 @@ class CompositionWidget : public QWidget
 	Q_OBJECT
 
 public:
-	CompositionWidget(QWidget *parent)
-	{
+	CompositionWidget(QWidget *parent=nullptr);
+	void maxiter(double maxiter);
+	int maxiter() const;
+	
+	void zoom(double zoom);
+	double zoom() const;
 
-	}
+	void move(double move);
+	double move() const;
+
+	void re_max(double re_max);
+	double re_max() const;
+
+	void re_min(double re_min);
+	double re_min() const;
+
+	void im_max(double im_max);
+	double im_max() const;
+
+	void im_min(double im_min);
+	double im_min() const;
+
+public slots:
+	void submitConfiguration();
+
+protected:
+	void keyPressEvent(QKeyEvent *event) override;
+
 private:
-	QGroupBox *group_box;
-	QPushButton *button;
-	QLineEdit *edit_maxiter;
-	QLineEdit *edit_zoom;
-	QLineEdit *edit_move;
-	QLineEdit *edit_re_max;
-	QLineEdit *edit_re_min;
-	QLineEdit *edit_im_max;
-	QLineEdit *edit_im_min;
 
-	int maxiter;
-	double zoom;
-	double move;
-	double re_max;
-	double re_min;
-	double im_max;
-	double im_min;
+	QSpinBox *edit_maxiter;
+	QDoubleSpinBox *edit_zoom;
+	QDoubleSpinBox *edit_move;
+	QDoubleSpinBox *edit_re_max;
+	QDoubleSpinBox *edit_re_min;
+	QDoubleSpinBox *edit_im_max;
+	QDoubleSpinBox *edit_im_min;
+	QPushButton *submitButton;
+
+	int maxiter_;
+	double zoom_;
+	double move_;
+	double re_max_;
+	double re_min_;
+	double im_max_;
+	double im_min_;
+};
+
+class MandelbrotViewer : public QWidget
+{
+	Q_OBJECT
+
+public:
+	MandelbrotViewer(QWidget *parent=nullptr);
 };
 
 class MandelbrotWidget : public QWidget
