@@ -14,23 +14,137 @@
 #include <QApplication>
 #include <QKeyEvent>
 #include <QFont>
+#include <QVBoxLayout>
+#include <QPushButton>
+#include <QGroupBox>
+#include <QLineEdit>
+#include <QLabel>
+#include <QFormLayout>
+#include <QComboBox>
+#include <QSpinBox>
 
+// class ControlsWidget : public QWidget
+// {
+// 	Q_OBJECT
+
+// public:
+// 	ControlsWidget(QWidget *parent = nullptr) : QWidget(parent)
+// 	{
+
+// 		this->setMaximumWidth(300);
+// 		// main layout
+// 		QVBoxLayout *layout = new QVBoxLayout(this);
+		
+// 		// item 1
+// 		group_box = new QGroupBox(tr("Settings"));
+// 		// group_box->setAlignment(Qt::AlignRight | Qt::AlignTop);
+// 		// group_box->setFixedSize(200, 400);
+
+// 		// item 2
+// 		button = new QPushButton(tr("Enter"));
+
+// 		layout->addWidget(group_box);
+// 		layout->addWidget(button);
+
+// 		edit_maxiter = new QLineEdit("");
+// 		edit_zoom = new QLineEdit("");
+// 		edit_move = new QLineEdit("");
+// 		edit_re_max = new QLineEdit("");
+// 		edit_re_min = new QLineEdit("");
+// 		edit_im_max = new QLineEdit("");
+// 		edit_im_min = new QLineEdit("");
+		
+// 		QFormLayout *gbl = new QFormLayout;
+// 	    gbl->addRow(new QLabel(tr("Maxiter:")), edit_maxiter);
+// 	    gbl->addRow(new QLabel(tr("Zoom:")), edit_zoom);
+// 	    gbl->addRow(new QLabel(tr("Move:")), edit_move);
+// 	    gbl->addRow(new QLabel(tr("re_max:")), edit_re_max);
+// 	    gbl->addRow(new QLabel(tr("re_min:")), edit_re_min);
+// 	    gbl->addRow(new QLabel(tr("im_max:")), edit_im_max);
+// 	    gbl->addRow(new QLabel(tr("im_min:")), edit_im_min);
+
+// 	    group_box->setLayout(gbl);
+
+// 	    connect(button, &QPushButton::clicked, &ControlsWidget::enterClicked);
+// 	}
+// protected:
+// 	QGroupBox *group_box;
+// 	QPushButton *button;
+// 	QLineEdit *edit_maxiter;
+// 	QLineEdit *edit_zoom;
+// 	QLineEdit *edit_move;
+// 	QLineEdit *edit_re_max;
+// 	QLineEdit *edit_re_min;
+// 	QLineEdit *edit_im_max;
+// 	QLineEdit *edit_im_min;
+
+// 	void enterClicked()
+// 	{
+// 		std::cout << edit_maxiter->text().toDouble() << std::endl;
+// 	}
+
+// 	void keyPressEvent(QKeyEvent* event) override
+// 	{
+// 		if(event->key() == Qt::Key_Return)
+// 		{
+// 			enterClicked();
+// 		}
+// 	}
+// };
+
+class CompositionWidget : public QWidget
+{
+	Q_OBJECT
+
+public:
+	CompositionWidget(QWidget *parent)
+	{
+
+	}
+private:
+	QGroupBox *group_box;
+	QPushButton *button;
+	QLineEdit *edit_maxiter;
+	QLineEdit *edit_zoom;
+	QLineEdit *edit_move;
+	QLineEdit *edit_re_max;
+	QLineEdit *edit_re_min;
+	QLineEdit *edit_im_max;
+	QLineEdit *edit_im_min;
+
+	int maxiter;
+	double zoom;
+	double move;
+	double re_max;
+	double re_min;
+	double im_max;
+	double im_min;
+};
 
 class MandelbrotWidget : public QWidget
 {
 	Q_OBJECT
 
 public:
+	// ControlsWidget *controlsWidget;
 	MandelbrotWidget(QWidget *parent = nullptr): QWidget(parent)
 	{
-		// QScreen *screen = QGuiApplication::primaryScreen();
-		// QRect  screenGeometry = screen->geometry();
-		// int height = screenGeometry.height();
-		// int width = screenGeometry.width();
-		// resize(height, width);
-		 // QTimer *timer = new QTimer(this);
-		 // connect(timer, SIGNAL(timeout()), this, SLOT(repaint()));
-		 // timer->start(1000 / 60);
+		    mapping[0].setRgb( 66,  30,  15 );
+		    mapping[1].setRgb( 25,  7,   26 );
+		    mapping[2].setRgb( 9,   1,   47 );
+		    mapping[3].setRgb( 4,   4,   73 );
+		    mapping[4].setRgb( 0,   7,   100);
+		    mapping[5].setRgb( 12,  44,  138);
+		    mapping[6].setRgb( 24,  82,  177);
+		    mapping[7].setRgb( 57,  125, 209);
+		    mapping[8].setRgb( 134, 181, 229);
+		    mapping[9].setRgb( 211, 236, 248);
+		    mapping[10].setRgb(241, 233, 191);
+		    mapping[11].setRgb(248, 201, 95 );
+		    mapping[12].setRgb(255, 170, 0  );
+		    mapping[13].setRgb(204, 128, 0  );
+		    mapping[14].setRgb(153, 87,  0  );
+		    mapping[15].setRgb(106, 52,  3  );
 	}
 
 protected:
@@ -41,14 +155,12 @@ protected:
 		}
 		else if(event->key() == Qt::Key_Plus)
 		{
-			zoom(re_min, re_max, zf);
-			zoom(im_min, im_max, zf);
+			zoomAll(zf);
 			repaint();
 		}
 		else if(event->key() == Qt::Key_Minus)
 		{
-			zoom(re_min, re_max, izf);
-			zoom(im_min, im_max, izf);;
+			zoomAll(1/zf);
 			repaint();
 		}
 		else if(event->key() == Qt::Key_W)
@@ -86,7 +198,6 @@ protected:
 		}
 		else if(event->key() == Qt::Key_Return)
 		{
-			std::cout << "ENTER\n";
 			repaint();
 		}
 	}
@@ -107,16 +218,14 @@ protected:
 		painter.drawText(rect(), Qt::AlignLeft | Qt::AlignVCenter, QString::number(re_min));
 		painter.drawText(rect(), Qt::AlignRight | Qt::AlignVCenter, QString::number(re_max));
 		painter.drawText(rect(), Qt::AlignRight | Qt::AlignTop, QString::number(maxiter));
-		painter.drawText(rect(), Qt::AlignCenter, tr("O"));
 	}
 private:
-	// double zf = 0.5;
+	QColor mapping[16];
 	double zf = 0.7;
-	// double izf = 2;
-	double izf = 1.4285714285714286;
-	int maxiter = 20;
+	int maxiter = 100;
 	double re_min{-2}, re_max{1.0};
 	double im_min{-1.2}, im_max{1.2};
+
 	void zoom(double &minimum, double &maximum, double zf)
 	{
 		double diff = maximum - minimum;
@@ -125,40 +234,23 @@ private:
 		minimum += add;
 		maximum -= add;
 	}
+
+	void zoomAll(double zf)
+	{
+		zoom(re_min, re_max, zf);
+		zoom(im_min, im_max, zf);
+	}
+
 	QColor getColor(int iteration)
 	{
 		if(iteration < maxiter)
 		{
-			// int i = (int) (iteration * 255*255*255) / maxiter;
-			// i = iteration;
-			// int R = (i & 0x000000FF);
-			// int G = (i & 0x0000FF00) >> 8;
-			// int B = (i & 0x00FF0000) >> 16;
-			// int A = (i & 0xFF000000) >> 24;
-			// return QColor(R,G,B,A);
-
-			int color = iteration % 16;
-			int a = iteration % 255;
-		    QColor mapping[16];
-		    mapping[0].setRgb( 66,  30,  15 );
-		    mapping[1].setRgb( 25,  7,   26 );
-		    mapping[2].setRgb( 9,   1,   47 );
-		    mapping[3].setRgb( 4,   4,   73 );
-		    mapping[4].setRgb( 0,   7,   100);
-		    mapping[5].setRgb( 12,  44,  138);
-		    mapping[6].setRgb( 24,  82,  177);
-		    mapping[7].setRgb( 57,  125, 209);
-		    mapping[8].setRgb( 134, 181, 229);
-		    mapping[9].setRgb( 211, 236, 248);
-		    mapping[10].setRgb(241, 233, 191);
-		    mapping[11].setRgb(248, 201, 95 );
-		    mapping[12].setRgb(255, 170, 0  );
-		    mapping[13].setRgb(204, 128, 0  );
-		    mapping[14].setRgb(153, 87,  0  );
-		    mapping[15].setRgb(106, 52,  3  );
-			return mapping[color];
+			return mapping[iteration % 16];
 		}
-		return Qt::white;
+		else
+		{
+			return Qt::white;
+		}
 	}
 	QImage mandelbrot()
 	{
@@ -167,16 +259,18 @@ private:
 
 		QImage img(w, h, QImage::Format_RGB888);
 
+
+		double ref = ((re_max - re_min) / (w - 1));
+		double imf =  ((im_max - im_min) / (h - 1));
 		for(int x=0; x<w; x++)
 		{
+			double c_re = re_min + x * ref;
 			for(int y=0; y<h; y++)
 			{
-				double c_re = re_min + x * ((re_max - re_min) / (w - 1) );
-				double c_im = im_max - y * ((im_max - im_min) / (h - 1));
+				double c_im = im_max - y * imf;
 				double Z_re = c_re;
 				double Z_im = c_im;
-				bool is_inside = true;
-				int i{0};
+				int i;
 				for(i=0; i<maxiter; i++)
 				{
 					if(Z_re*Z_re + Z_im*Z_im > 4)
@@ -187,8 +281,7 @@ private:
 					Z_im = 2 * Z_re * Z_im + c_im;
 					Z_re = Z_re * Z_re - Z_im2 + c_re;
 				}
-				QColor color = getColor(i);
-				img.setPixelColor(x, y, color);
+				img.setPixelColor(x, y, getColor(i));
 			}
 		}
 		return img;
