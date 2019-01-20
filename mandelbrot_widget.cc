@@ -15,7 +15,7 @@
 #include<QPainter>
 #include<QImage>
 #include<QLabel>
-
+#include "mandelbrot.h"
 #include<iostream>
 
 
@@ -218,30 +218,44 @@ QImage MandelbrotViewer::mandelbrot() const
 
 	double ref = ((re_max_ - re_min_) / (w - 1));
 	double imf =  ((im_max_ - im_min_) / (h - 1));
+	int n = 0;
 	for(int x=0; x<w; x++)
 	{
 		double c_re = re_min_ + x * ref;
 		for(int y=0; y<h; y++)
 		{
 			double c_im = im_max_ - y * imf;
-			double Z_re = c_re;
-			double Z_im = c_im;
-			int i;
-			for(i=0; i<maxiter_; i++)
-			{
-				if(Z_re*Z_re + Z_im*Z_im > 4)
-				{
-					break;
-				}
-				double Z_im2 = Z_im * Z_im;
-				Z_im = 2 * Z_re * Z_im + c_im;
-				Z_re = Z_re * Z_re - Z_im2 + c_re;
-			}
-			img.setPixelColor(x, y, getColor(i));
+			n = calcMandelbrot2(c_re, c_im, maxiter_);
+			img.setPixelColor(x, y, getColor(n));
 		}
 	}
 	return img;
 }
+// QImage MandelbrotViewer::mandelbrot() const
+// {
+// 	int w = width();
+// 	int h = height();
+
+// 	QImage img(w, h, QImage::Format_RGB888);
+
+
+// 	double ref = ((re_max_ - re_min_) / (w - 1));
+// 	double imf =  ((im_max_ - im_min_) / (h - 1));
+// 	int n = 0;
+// 	double c_re = re_max_;
+// 	double c_im = im_max_;
+// 	for(int x=0; x<w; x++)
+// 	{
+// 		for(int y=0; y<h; y++)
+// 		{
+// 			n = calcMandelbrot2(c_re, c_im, maxiter_);
+// 			img.setPixelColor(x, y, getColor(n));
+// 			c_im -= imf;
+// 		}
+// 		c_re += ref;
+// 	}
+// 	return img;
+// }
 
 QColor MandelbrotViewer::getColor(int iteration) const
 {
