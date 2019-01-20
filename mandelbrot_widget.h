@@ -6,23 +6,12 @@
 #include <cmath>
 
 #include <QWidget>
-#include <QPainter>
 #include <QImage>
-#include <QPixmap>
 #include <QColor>
-#include <QTimer>
-#include <QApplication>
 #include <QKeyEvent>
-#include <QFont>
-#include <QVBoxLayout>
 #include <QPushButton>
-#include <QGroupBox>
-#include <QLineEdit>
-#include <QLabel>
-#include <QFormLayout>
-#include <QComboBox>
 #include <QSpinBox>
-
+#include <QDoubleSpinBox>
 
 class MandelbrotViewer : public QWidget
 {
@@ -91,6 +80,8 @@ private:
 	void applyZoom(double faktor);
 	void applyZoom_helper(double &min, double& max, double faktor);
 	void applyMove(MoveDirection direction);
+
+	QDoubleSpinBox* makeQDoubleSpinBox(double min, double max, double dec, double val, QWidget *parent);
 };
 
 #endif // MANDELBROT_WIDGET_H_

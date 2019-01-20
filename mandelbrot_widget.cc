@@ -14,6 +14,7 @@
 #include<QPaintEvent>
 #include<QPainter>
 #include<QImage>
+#include<QLabel>
 
 #include<iostream>
 
@@ -53,35 +54,12 @@ CompositionWidget::CompositionWidget(QWidget *parent) : QWidget(parent)
 	edit_maxiter->setRange(10, 1'000'000);
 	edit_maxiter->setValue(50);
 
-	edit_zoom = new QDoubleSpinBox(inputGroup);
-	edit_zoom->setRange(-10, 10);
-	edit_zoom->setDecimals(2);
-	edit_zoom->setValue(0.7);
-
-	edit_move = new QDoubleSpinBox(inputGroup);
-	edit_move->setRange(0, 100);
-	edit_move->setDecimals(2);
-	edit_move->setValue(0.1);
-
-	edit_re_max = new QDoubleSpinBox(inputGroup);
-	edit_re_max->setRange(-10, 10);
-	edit_re_max->setDecimals(10);
-	edit_re_max->setValue(1.0);
-
-	edit_re_min = new QDoubleSpinBox(inputGroup);
-	edit_re_min->setRange(-10, 10);
-	edit_re_min->setDecimals(10);
-	edit_re_min->setValue(-2.0);
-
-	edit_im_max = new QDoubleSpinBox(inputGroup);
-	edit_im_max->setRange(-10, 10);
-	edit_im_max->setDecimals(10);
-	edit_im_max->setValue(1.2);
-
-	edit_im_min = new QDoubleSpinBox(inputGroup);
-	edit_im_min->setRange(-10, 10);
-	edit_im_min->setDecimals(10);
-	edit_im_min->setValue(-1.2);
+	edit_zoom = makeQDoubleSpinBox(-10, 10, 2, 0.7, inputGroup);
+	edit_move = makeQDoubleSpinBox(0, 100, 2 ,0.1, inputGroup);
+	edit_re_max = makeQDoubleSpinBox(-10, 10, 10, 1, inputGroup);
+	edit_re_min = makeQDoubleSpinBox(-10, 10, 10, -2, inputGroup);
+	edit_im_max = makeQDoubleSpinBox(-10, 10, 10, 1.2, inputGroup);
+	edit_im_min = makeQDoubleSpinBox(-10, 10, 10, -1.2, inputGroup);
 
 	submitButton = new QPushButton(tr("Submit"), configGroup);
 
@@ -108,6 +86,19 @@ CompositionWidget::CompositionWidget(QWidget *parent) : QWidget(parent)
 
     connect(submitButton,
     		SIGNAL(clicked()), this, SLOT(submitConfiguration()));
+    submitConfiguration();
+}
+
+QDoubleSpinBox* CompositionWidget::makeQDoubleSpinBox(
+		double min, double max,
+		double dec, double val,
+		QWidget *parent)
+{
+	QDoubleSpinBox* qdsb = new QDoubleSpinBox(parent);
+	qdsb->setRange(min, max);
+	qdsb->setDecimals(dec);
+	qdsb->setValue(val);
+	return qdsb;
 }
 
 void CompositionWidget::submitConfiguration()
@@ -189,23 +180,28 @@ void CompositionWidget::applyZoom_helper(double &min, double& max, double faktor
 }
 void CompositionWidget::applyMove(CompositionWidget::MoveDirection direction)
 {
+	double d;
 	switch(direction)
 	{
 		case CompositionWidget::MoveDirection::UP:
-			im_min_ += move_ * (im_max_ - im_min_);
-			im_max_ += move_ * (im_max_ - im_min_);
+			d = move_  * (im_max_ - im_min_);
+			im_min_ += d;
+			im_max_ += d;
 			break;
 		case CompositionWidget::MoveDirection::DOWN:
-			im_min_ -= move_ * (im_max_ - im_min_);
-			im_max_ -= move_ * (im_max_ - im_min_);
+			d = move_  * (im_max_ - im_min_);
+			im_min_ -= d;
+			im_max_ -= d;
 			break;
 		case CompositionWidget::MoveDirection::LEFT:
-			re_min_ -= move_ * (re_max_ - re_min_);
-			re_max_ -= move_ * (re_max_ - re_min_);
+			d = move_ * (re_max_ - re_min_);
+			re_min_ -= d;
+			re_max_ -= d;
 			break;
 		case CompositionWidget::MoveDirection::RIGHT:
-			re_min_ += move_ * (re_max_ - re_min_);
-			re_max_ += move_ * (re_max_ - re_min_);
+			d = move_ * (re_max_ - re_min_);
+			re_min_ += d;
+			re_max_ += d;
 			break;
 	}
 	updateConfiguration();
