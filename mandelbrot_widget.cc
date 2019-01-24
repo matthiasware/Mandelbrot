@@ -1,5 +1,6 @@
 #include "mandelbrot_widget.h"
 #include <iostream>
+#include <iomanip>
 
 #include<QWidget>
 #include<QGroupBox>
@@ -231,6 +232,7 @@ QImage MandelbrotViewer::mandelbrot() const
 	}
 	return img;
 }
+
 // QImage MandelbrotViewer::mandelbrot() const
 // {
 // 	int w = width();
@@ -242,17 +244,24 @@ QImage MandelbrotViewer::mandelbrot() const
 // 	double ref = ((re_max_ - re_min_) / (w - 1));
 // 	double imf =  ((im_max_ - im_min_) / (h - 1));
 // 	int n = 0;
-// 	double c_re = re_max_;
-// 	double c_im = im_max_;
-// 	for(int x=0; x<w; x++)
+// 	double c_re = re_min_;
+// 	for(int x=0; x<w; ++x)
 // 	{
+// 		std::cout << std::setprecision(10) << c_re << std::endl;
+// 		// double c_re = re_min_ + x * ref;
+// 		// std::cout <<  x << ": " << c_re << ":" <<  ref << std::endl;
 // 		for(int y=0; y<h; y++)
 // 		{
+// 			double c_im = im_max_ - y * imf;
 // 			n = calcMandelbrot2(c_re, c_im, maxiter_);
 // 			img.setPixelColor(x, y, getColor(n));
-// 			c_im -= imf;
 // 		}
-// 		c_re += ref;
+// 		c_re = c_re + ref;
+// 		std::cout << std::setprecision(10) << c_re << std::endl;
+// 		if(x%10 == 0)
+// 		{
+// 			return img;
+// 		}
 // 	}
 // 	return img;
 // }

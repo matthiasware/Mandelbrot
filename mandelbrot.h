@@ -1,40 +1,39 @@
 #ifndef MANDELBROT_H_
 #define MANDELBROT_H_
-#include <QImage>
+#include <iostream>
+// QImage mandelbrot1(int w, int h, int maxiter,
+// 		   double re_min, double re_max,
+// 		   double im_min, double im_max)
+// {
+// 	QImage img(w, h, QImage::Format_RGB888);
 
-QImage mandelbrot1(int w, int h, int maxiter,
-		   double re_min, double re_max,
-		   double im_min, double im_max)
-{
-	QImage img(w, h, QImage::Format_RGB888);
 
-
-	double ref = ((re_max - re_min) / (w - 1));
-	double imf =  ((im_max - im_min) / (h - 1));
-	for(int x=0; x<w; x++)
-	{
-		double c_re = re_min + x * ref;
-		for(int y=0; y<h; y++)
-		{
-			double c_im = im_max - y * imf;
-			double Z_re = c_re;
-			double Z_im = c_im;
-			int i;
-			for(i=0; i<maxiter; i++)
-			{
-				if(Z_re*Z_re + Z_im*Z_im > 4)
-				{
-					break;
-				}
-				double Z_im2 = Z_im * Z_im;
-				Z_im = 2 * Z_re * Z_im + c_im;
-				Z_re = Z_re * Z_re - Z_im2 + c_re;
-			}
-			// img.setPixelColor(x, y, getColor(i));
-		}
-	}
-	return img;
-}
+// 	double ref = ((re_max - re_min) / (w - 1));
+// 	double imf =  ((im_max - im_min) / (h - 1));
+// 	for(int x=0; x<w; x++)
+// 	{
+// 		double c_re = re_min + x * ref;
+// 		for(int y=0; y<h; y++)
+// 		{
+// 			double c_im = im_max - y * imf;
+// 			double Z_re = c_re;
+// 			double Z_im = c_im;
+// 			int i;
+// 			for(i=0; i<maxiter; i++)
+// 			{
+// 				if(Z_re*Z_re + Z_im*Z_im > 4)
+// 				{
+// 					break;
+// 				}
+// 				double Z_im2 = Z_im * Z_im;
+// 				Z_im = 2 * Z_re * Z_im + c_im;
+// 				Z_re = Z_re * Z_re - Z_im2 + c_re;
+// 			}
+// 			// img.setPixelColor(x, y, getColor(i));
+// 		}
+// 	}
+// 	return img;
+// }
 int calcMandelbrot0(double c_re, double c_im, int maxiter)
 {
 	double Z_re = c_re;
@@ -84,6 +83,32 @@ int calcMandelbrot2(double c_re, double c_im, int maxiter)
 		i++;
 	}
 	return i;
+}
+
+void calcAll(int w, int h, int maxiter,
+			 double re_min, double re_max,
+			 double im_min, double im_max,
+			 int *map)
+{
+	double re_step = ((re_max - re_min) / (w - 1));
+	double im_step = ((im_max - im_min) / (h - 1));
+
+	double c_re = re_min;
+	double c_im = im_max;
+	for(int x=0; x<w; x++)
+	{
+		c_im = im_max;
+		for(int y=0; y<h; y++)
+		{
+			int val = calcMandelbrot2(c_re, c_im, maxiter);
+			// std::cout << x << " " << y << " "
+			// 		  << c_re << " " << c_im << " "
+			// 		  << val << std::endl;
+			map[x*h + y] = val;
+			c_im -= im_step;
+		}
+		c_re += re_step;
+	}
 }
 
 #endif // MANDELBROT_H_
