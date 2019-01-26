@@ -1,42 +1,66 @@
 #include "mandelbrot.h"
-#include <iostream>
-#include <fstream>
+#include <benchmark/benchmark.h>
 
-// https://de.wikipedia.org/wiki/Portable_Anymap#Pixmap
-void toFile(int w, int h, int maxiter, int* map)
-{
-	std::ofstream img("mandelbrot.ppm");
-	if(!img.is_open())
-	{
-		std::cout << "Could not open the file";
-		return;
-	}
-	img << "P3\n" << h << " " << w << " 255\n";
-	for(int x=0; x<w; x++)
-	{
-		for(int y=0; y<h; y++)
-		{
-			int val = (map[x * h  + y] % 255);
-			img << val << ' ' << 0 << ' ' << 0 << "\n";
-		}
-	}
-	img.close();
+int w = 1440;
+int h = 1080;
+int maxiter = 256;
+double re_min = -2.5;
+double re_max = 1.5;
+double im_min = -1.5;
+double im_max = 1.5;
+
+
+static void BM_calcMandelbrot_0(benchmark::State &state) {
+
+  int *map = new int[w * h];
+  for (auto _ : state) {
+    mandelbrot0(w, h, maxiter, re_min, re_max, im_min, im_max, map);
+  }
+  toFile(w, h, maxiter, map, "mb0");
 }
 
+BENCHMARK(BM_calcMandelbrot_0)->Unit(benchmark::kMillisecond);
 
-int main()
-{
-	int w = 3000;
-	int h = 2400;
-	int maxiter = 500;
-	double re_min = -2;
-	double re_max = 1;
-	double im_min = -1.2;
-	double im_max = 1.2;
+static void BM_calcMandelbrot_1(benchmark::State &state) {
 
-	int *map = new int[w*h];
+  int *map = new int[w * h];
 
-	calcAll(w, h, maxiter, re_min, re_max, im_min, im_max, map);
-	// toFile(w, h, maxiter, map);
-	delete[] map;
+  for (auto _ : state) {
+    mandelbrot1(w, h, maxiter, re_min, re_max, im_min, im_max, map);
+  }
+  toFile(w, h, maxiter, map, "mb1");
 }
+BENCHMARK(BM_calcMandelbrot_1)->Unit(benchmark::kMillisecond);
+
+static void BM_calcMandelbrot_2(benchmark::State &state) {
+
+  int *map = new int[w * h];
+  for (auto _ : state) {
+    mandelbrot2(w, h, maxiter, re_min, re_max, im_min, im_max, map);
+  }
+  toFile(w, h, maxiter, map, "mb2");
+}
+BENCHMARK(BM_calcMandelbrot_2)->Unit(benchmark::kMillisecond);
+
+
+static void BM_calcMandelbrot_OMP_col(benchmark::State &state) {
+
+  int *map = new int[w * h];
+  for (auto _ : state) {
+    mandelbrot_OMP_col(w, h, maxiter, re_min, re_max, im_min, im_max, map);
+  }
+  toFile(w, h, maxiter, map, "mb_omp_col");
+}
+BENCHMARK(BM_calcMandelbrot_OMP_col)->Unit(benchmark::kMillisecond);
+
+static void BM_calcMandelbrot_OMP_row(benchmark::State &state) {
+
+  int *map = new int[w * h];
+  for (auto _ : state) {
+    mandelbrot_OMP_row(w, h, maxiter, re_min, re_max, im_min, im_max, map);
+  }
+  toFile(w, h, maxiter, map, "mb_omp_row", true);
+}
+BENCHMARK(BM_calcMandelbrot_OMP_row)->Unit(benchmark::kMillisecond);
+
+BENCHMARK_MAIN();

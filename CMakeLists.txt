@@ -10,10 +10,25 @@ target_compile_features(main PRIVATE cxx_std_14)
 target_link_libraries(main PRIVATE Qt5::Widgets)
 set_target_properties(main PROPERTIES AUTOMOC TRUE)
 
-add_executable(bench mandelbench.cc mandelbrot.h)
 
+
+find_package(OpenMP REQUIRED)
+
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
 
 find_package(benchmark REQUIRED)
 find_package(Threads REQUIRED)
-add_executable(google google.cc)
-target_link_libraries(google Threads::Threads benchmark)
+
+add_executable(bench mandelbench.cc mandelbrot.h)
+target_link_libraries(bench PRIVATE Threads::Threads benchmark)
+target_link_libraries(bench PRIVATE ${OpenMP_CXX_FLAGS})
+
+
+
+
+add_executable(google google.cc mandelbrot.h)
+target_link_libraries(google PRIVATE ${OpenMP_CXX_FLAGS})
