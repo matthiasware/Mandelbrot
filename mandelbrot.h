@@ -29,6 +29,7 @@ void toFile(int w, int h, int maxiter,
   }
   img.close();
 }
+
 // QImage mandelbrot1(int w, int h, int maxiter,
 // 		   double re_min, double re_max,
 // 		   double im_min, double im_max)
@@ -115,6 +116,7 @@ int calcMandelbrot2(double c_re, double c_im, int maxiter)
 	}
 	return i;
 }
+
 void mandelbrot0(int w, int h, int maxiter,
 			 double re_min, double re_max,
 			 double im_min, double im_max,
