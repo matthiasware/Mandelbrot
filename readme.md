@@ -1,4 +1,5 @@
 todo:
+- smooth coloring
 - gui controlling features
 - smooth coloring: https://csl.name/post/mandelbrot-rendering/
 - Keypressed events
