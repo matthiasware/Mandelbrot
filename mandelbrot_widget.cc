@@ -254,25 +254,20 @@ QImage MandelbrotViewer::mandelbrot() const
 	int h = height();
 
 	QImage img(w, h, QImage::Format_ARGB32);
-	int *map = reinterpret_cast<int*>(img.bits());
+	int *map = reinterpret_cast<int*>(img.bits()); // is 32 bit aligned
 
 	mandelbrot_avx_omp(w, h, maxiter_, re_min_, re_max_, im_min_, im_max_, map);
 
-	for(int y=0; y<h; y++)
+	for(int i=0; i<w*h; i++)
 	{
-		for(int x=0; x<w; x++)
-		{
+		int val = map[i];
+		double pc = ((double) val) / maxiter_;
 
-			int val = map[y*w + x];
-			double pc = ((double) val) / maxiter_;
-
-			int r =(int) std::min(255.0, pc * 255/0.2);
-			int g = (int) pc * 255.0;
-			int b = (int) (255/2 + 1)*sin(pc*3*3.141592653589793 - 1.5) + (255/2 + 1);
-			int col = 0xff000000 | r<<16 | g<<8 | b;
-			map[y*w + x] = col;
-
-		}
+		int r =(int) std::min(255.0, pc * 1275); // 1275 = 255*5 = 255 / 0.2
+		int g = (int) pc * 255.0;
+		int b = (int) (255/2 + 1)*sin(pc*3*3.141592653589793 - 1.5) + (255/2 + 1);
+		int col = 0xff000000 | r<<16 | g<<8 | b;
+		map[i] = col;
 	}
 	return img;
 }

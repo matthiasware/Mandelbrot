@@ -243,7 +243,7 @@ void mandelbrot_avx_omp(
                                      re_min + re_step_d + re_step_d,
                                      re_min + re_step_d + re_step_d + re_step_d);
 
-  #pragma omp parallel for schedule(dynamic, 1)
+  #pragma omp parallel for schedule(dynamic)
   for(int y=0; y<h; y++)
   {
   	__m256d c_im = _mm256_set1_pd(im_max - y * im_step_d);
