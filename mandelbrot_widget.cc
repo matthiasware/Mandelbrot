@@ -18,6 +18,7 @@
 #include<QLabel>
 #include "mandelbrot.h"
 #include<iostream>
+#include <math.h>
 
 
 MandelbrotViewer::MandelbrotViewer(QWidget *parent) : QWidget(parent)
@@ -209,27 +210,58 @@ void CompositionWidget::applyMove(CompositionWidget::MoveDirection direction)
 	updateViewer();
 }
 
+// QImage MandelbrotViewer::mandelbrot() const
+// {
+// 	int w = width();
+// 	int h = height();
+
+// 	QImage img(w, h, QImage::Format_RGB888);
+
+
+// 	double ref = ((re_max_ - re_min_) / (w - 1));
+// 	double imf =  ((im_max_ - im_min_) / (h - 1));
+// 	int n = 0;
+// 	for(int x=0; x<w; x++)
+// 	{
+// 		double c_re = re_min_ + x * ref;
+// 		for(int y=0; y<h; y++)
+// 		{
+// 			double c_im = im_max_ - y * imf;
+// 			n = calcMandelbrot(c_re, c_im, maxiter_);
+// 			img.setPixelColor(x, y, getColor(n));
+// 		}
+// 	}
+// 	return img;
+// }
 QImage MandelbrotViewer::mandelbrot() const
 {
 	int w = width();
+	w = w + w %4;
 	int h = height();
 
-	QImage img(w, h, QImage::Format_RGB888);
+	QImage img(w, h, QImage::Format_RGB32);
+	// QImage img(w, h, QImage::Format_HSV);
+	// QImage img(w, h);
+	int* map = (int*)aligned_alloc(32, h*w * sizeof(int));
+	mandelbrot_avx_omp(w, h, maxiter_, re_min_, re_max_, im_min_, im_max_, map);
 
-
-	double ref = ((re_max_ - re_min_) / (w - 1));
-	double imf =  ((im_max_ - im_min_) / (h - 1));
-	int n = 0;
-	for(int x=0; x<w; x++)
+	for(int y=0; y<h; y++)
 	{
-		double c_re = re_min_ + x * ref;
-		for(int y=0; y<h; y++)
+		for(int x=0; x<w; x++)
 		{
-			double c_im = im_max_ - y * imf;
-			n = calcMandelbrot(c_re, c_im, maxiter_);
-			img.setPixelColor(x, y, getColor(n));
+
+			int val = map[y*w + x];
+			double pc = ((double) val) / maxiter_;
+
+			int red =(int) std::min(255.0, pc * 255/0.2);
+			int green = (int) pc * 255.0;
+			int blue = (int) (255/2 + 1)*sin(pc*3*3.141592653589793 - 1.5) + (255/2 + 1);
+
+			// constant hue and constant saturation
+			img.setPixelColor(x, y, QColor(red, green, blue));
 		}
 	}
+	free(map);
 	return img;
 }
 

@@ -6,8 +6,10 @@
 #include <omp.h>
 #include <immintrin.h>
 #include <cassert>
+#include <math.h>
 
 // https://de.wikipedia.org/wiki/Portable_Anymap#Pixmap
+
 void toFile(int w, int h, int maxiter,
 	        int *map, std::string fileName,
 	        bool transpose=false) {
@@ -50,6 +52,30 @@ inline int calcMandelbrot(double c_re, double c_im, int maxiter)
 		i++;
 	}
 	return i;
+}
+
+void mandelbrot_col(int w, int h, int maxiter,
+			 double re_min, double re_max,
+			 double im_min, double im_max,
+			 int *map)
+{
+	double re_step = ((re_max - re_min) / (w - 1));
+	double im_step = ((im_max - im_min) / (h - 1));
+
+	double c_re = re_min;
+	double c_im = im_max;
+	for(int x=0; x<w; x++)
+	{
+		c_im = im_max;
+		for(int y=0; y<h; y++)
+		{
+			int val = calcMandelbrot(c_re, c_im, maxiter);
+			val += 1 - log(log(sqrt(c_re * c_re + c_im * c_im))) / log(2);
+			map[x*h + y] = val;
+			c_im -= im_step;
+		}
+		c_re += re_step;
+	}
 }
 
 void mandelbrot(int w, int h, int maxiter,
@@ -170,6 +196,33 @@ void mandelbrot_avx(
       c_re = _mm256_add_pd(c_re, re_step);
     }
   }
+}
+
+int doule2int(double d)
+{
+  int i=0;
+  d += 6755399441055744.0;
+    return i = *((int *)(&d));
+}
+
+void inspect(__m256d &v)
+{
+  double *d = (double *) &v;
+  std::cout << d[0] << " " << d[1]  << " " << d[2] << " " << d[3] << std::endl;
+}
+
+void inspect(__m256i &v)
+{
+  int *d = (int *) &v;
+  std::cout << d[0] << " " << d[1]  << " " << d[2] << " " << d[3] << " "
+            << d[4] << " " << d[5]  << " " << d[6] << " " << d[7] 
+            << std::endl;
+}
+
+void inspect(__m128i &v)
+{
+  int *d = (int *) &v;
+  std::cout << d[0] << " " << d[1]  << " " << d[2] << " " << d[3] << std::endl;
 }
 
 void mandelbrot_avx_omp(
