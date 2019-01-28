@@ -233,16 +233,29 @@ void CompositionWidget::applyMove(CompositionWidget::MoveDirection direction)
 // 	}
 // 	return img;
 // }
+
+int red(double pc)
+{
+  return (int) std::min(255.0, pc * 255/0.2);
+}
+int green(double pc)
+{
+  return pc * 255.0;
+}
+int blue(double pc)
+{
+  return (int) (255/2 + 1)*sin(pc*3*3.141592653589793 - 1.5) + (255/2 + 1);
+}
+
 QImage MandelbrotViewer::mandelbrot() const
 {
 	int w = width();
 	w = w + w %4;
 	int h = height();
 
-	QImage img(w, h, QImage::Format_RGB32);
-	// QImage img(w, h, QImage::Format_HSV);
-	// QImage img(w, h);
-	int* map = (int*)aligned_alloc(32, h*w * sizeof(int));
+	QImage img(w, h, QImage::Format_ARGB32);
+	int *map = reinterpret_cast<int*>(img.bits());
+
 	mandelbrot_avx_omp(w, h, maxiter_, re_min_, re_max_, im_min_, im_max_, map);
 
 	for(int y=0; y<h; y++)
@@ -253,15 +266,14 @@ QImage MandelbrotViewer::mandelbrot() const
 			int val = map[y*w + x];
 			double pc = ((double) val) / maxiter_;
 
-			int red =(int) std::min(255.0, pc * 255/0.2);
-			int green = (int) pc * 255.0;
-			int blue = (int) (255/2 + 1)*sin(pc*3*3.141592653589793 - 1.5) + (255/2 + 1);
+			int r =(int) std::min(255.0, pc * 255/0.2);
+			int g = (int) pc * 255.0;
+			int b = (int) (255/2 + 1)*sin(pc*3*3.141592653589793 - 1.5) + (255/2 + 1);
+			int col = 0xff000000 | r<<16 | g<<8 | b;
+			map[y*w + x] = col;
 
-			// constant hue and constant saturation
-			img.setPixelColor(x, y, QColor(red, green, blue));
 		}
 	}
-	free(map);
 	return img;
 }
 

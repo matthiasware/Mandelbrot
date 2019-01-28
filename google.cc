@@ -88,8 +88,8 @@ void mandelbrot_col2(int w, int h, int maxiter,
 }
 
 int main() {
-  int w = 3000;
-  int h = 1200;
+  int w = 30;
+  int h = 10;
   int maxiter = 1000;
   double re_min = -2;
   double re_max = 1;
@@ -98,8 +98,24 @@ int main() {
 
   int* map = (int*)aligned_alloc(32, h*w * sizeof(int));
   mandelbrot_avx(w, h, maxiter, re_min, re_max, im_min, im_max, map);
-  toFile(w, h , maxiter, map, "map", true);
-  toFileColor(w, h , maxiter, map, "map_color", true);
+  for(int i=0; i<w*h; i++)
+  {
+    int r=red(map[i]);
+    int g=green(map[i]);
+    int b=blue(map[i]);
+    int col = 0xff000000 | r<<16 | g<<8 | b;
+    map[i] = col;
+    std::cout << std::hex << col << std::endl;
+  }
+  // toFile(w, h , maxiter, map, "map", true);
+  // toFileColor(w, h , maxiter, map, "map_color", true);
+  // int col = 0xff000000;
+  // int r = 210;
+  // int g = 11;
+  // int b = 129;
+
+  // col = (col  | r<<16 | g<<8 | b);
+  // std::cout << std::hex << col << std::endl;
   // for(int i=0; i<=100; i++)
   // {
   //   double pc = i / 100.0;
