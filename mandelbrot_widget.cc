@@ -226,7 +226,7 @@ QImage MandelbrotViewer::mandelbrot() const
 		for(int y=0; y<h; y++)
 		{
 			double c_im = im_max_ - y * imf;
-			n = calcMandelbrot2(c_re, c_im, maxiter_);
+			n = calcMandelbrot(c_re, c_im, maxiter_);
 			img.setPixelColor(x, y, getColor(n));
 		}
 	}

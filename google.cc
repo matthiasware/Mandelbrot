@@ -48,7 +48,7 @@ void mandelbrot_AVX_3(
                                   re_min + 3 * re_step_d);
     for(int x=0; x<w; x+=4)
     {
-      __m128i r2 = calcMandelbrot_AVX(c_re, c_im, maxiter);
+      __m128i r2 = calcMandelbrot_avx(c_re, c_im, maxiter);
       _mm_storeu_si128((__m128i *)&map[y*w+x], r2);
       c_re = _mm256_add_pd(c_re, re_step);
     }
@@ -98,9 +98,9 @@ int main() {
   int* map3 = (int*)aligned_alloc(32, h*w * sizeof(int));
   // int *threadIDs = new int[w * h];
   // test();
-  mandelbrot_OMP_row(w, h, maxiter, re_min, re_max, im_min, im_max, map1);
-  mandelbrot_AVX_2(w, h, maxiter, re_min, re_max, im_min, im_max, map2);
-  mandelbrot_AVX_2_OMP_OPTIMIZED(w, h, maxiter, re_min, re_max, im_min, im_max, map3);
+  mandelbrot_omp(w, h, maxiter, re_min, re_max, im_min, im_max, map1);
+  mandelbrot_avx(w, h, maxiter, re_min, re_max, im_min, im_max, map2);
+  mandelbrot_avx_omp(w, h, maxiter, re_min, re_max, im_min, im_max, map3);
   bool equals = true;
   for(int i=0; i<w*h; i+=1)
   {
@@ -115,4 +115,17 @@ int main() {
   toFile(w, h, maxiter, map1, "map1", true);
   toFile(w, h, maxiter, map2, "map2", true);
   toFile(w, h, maxiter, map3, "map3", true);
+
+
+  double darr[2] = {3.3, 3.5};
+  darr[0] += 6755399441055744.0;
+  darr[1] += 6755399441055744.0;
+
+  std::cout << darr[0] << " " << darr[1] << std::endl;
+
+  int *ip = (int*) darr;
+  for(int i=0; i<4; i++)
+  {
+    std::cout << *(ip+i) << std::endl;
+  }
 }
