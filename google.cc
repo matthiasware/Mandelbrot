@@ -4,113 +4,66 @@
 #include <iostream>
 #include <iomanip>
 #include <math.h>
+#include <cstring>
 //  https://software.intel.com/sites/landingpage/IntrinsicsGuide/#techs=AVX,AVX2&cats=Store&expand=3525
 
-
-struct RGB
+void inspectc(__m256i &v)
 {
-  int red;
-  int green;
-  int blue;
-};
-
-int red(double pc)
-{
-  return (int) std::min(255.0, pc * 255/0.2);
-}
-int green(double pc)
-{
-  return pc * 255.0;
-}
-int blue(double pc)
-{
-  return (int) (255/2 + 1)*sin(pc*3*3.141592653589793 - 1.5) + (255/2 + 1);
-}
-RGB calcColor(int i, int maxiter)
-{
-  double pc = ((double) i) / maxiter;
-  int r = red(pc);
-  int g = green(pc);
-  int b = blue(pc);
-  return RGB{r, g, b};
+  __m256i tmp = _mm256_or_si256(v, _mm256_set1_epi32(0xff000000));
+  int *d = (int *) &tmp;
+  std::cout << std::hex << d[0] << " " << d[1]  << " " << d[2] << " " << d[3] << " "
+            << d[4] << " " << d[5]  << " " << d[6] << " " << d[7] 
+            << std::endl;
 }
 
-void toFileColor(int w, int h, int maxiter,
-          int *map, std::string fileName,
-          bool transpose=false) {
-  if(transpose)
-  {
-    int tmp = w;
-    w = h;
-    h = tmp;
-  }
-  std::ofstream img(fileName + ".ppm");
-  if (!img.is_open()) {
-    std::cout << "Could not open the file";
-    return;
-  }
-  img << "P3\n" << h << " " << w << " 255\n";
-  for (int x = 0; x < w; x++) {
-    for (int y = 0; y < h; y++) {
-      int val = map[x * h + y];
-      RGB rgb = calcColor(val, maxiter);
-      int r = rgb.red;
-      int g = rgb.green;
-      int b =  rgb.blue;
-      img << r << ' ' << g << ' ' << b << "\n";
-    }
-  }
-  img.close();
-}
-
-void mandelbrot_col2(int w, int h, int maxiter,
-       double re_min, double re_max,
-       double im_min, double im_max,
-       int *map)
+int calcRed(double pc)
 {
-  double re_step = ((re_max - re_min) / (w - 1));
-  double im_step = ((im_max - im_min) / (h - 1));
-
-  double c_re = re_min;
-  double c_im = im_max;
-  for(int x=0; x<w; x++)
-  {
-    c_im = im_max;
-    for(int y=0; y<h; y++)
-    {
-      int val = calcMandelbrot(c_re, c_im, maxiter);
-      val += 1 - log(log(sqrt(c_re * c_re + c_im * c_im))) / log(2);
-      map[x*h + y] = val;
-      c_im -= im_step;
-    }
-    c_re += re_step;
-  }
+  return std::min(255, static_cast<int>(pc * 1275));
 }
+
+// __m256i calcRed(__m256 pcs)
+// {
+//   __m256 red = _mm256_set1_ps(1275);
+//   red = _mm256_mul_ps(red, pcs);
+//   __m256i red_int = _mm256_cvtps_epi32(red);
+//   red_int = _mm256_slli_epi32(red_int, 16);
+//   return red_int;
+// }
 
 int main() {
-  int w = 3000;
-  int h = 1000;
+  int w = 40;
+  int h = 10;
   int maxiter = 1000;
   double re_min = -2;
   double re_max = 1;
   double im_min = -1.5;
   double im_max = 1.5;
 
-  int* map = (int*)aligned_alloc(32, h*w * sizeof(int));
-  mandelbrot_avx(w, h, maxiter, re_min, re_max, im_min, im_max, map);
- 
-  for(int i=0; i<w*h; i++)
-  {
-    int val = map[i];
-    double pc = ((double) val) / maxiter;
+  int* map_work = (int*)aligned_alloc(32, h*w * sizeof(int));
+  int* map_test = (int*)aligned_alloc(32, h*w * sizeof(int));
+  mandelbrot_avx(w, h, maxiter, re_min, re_max, im_min, im_max, map_work);
+  std::memcpy(map_test, map_work, w*h*sizeof(int));
+  colorMap(w, h, maxiter, map_work);
+  colorMap_avx(w, h, maxiter, map_test);
 
-    int r =(int) std::min(255, (int) (pc * 1275)); // 1275 = 255*5 = 255 / 0.2
-    int g = (int) pc * 255.0;
-    int b = (int) (127)*(sin( -3.14159263589793 * ( 3 * pc + .5)) + 1);
-    int col = 0xff000000 | r<<16 | g<<8 | b;
-    map[i] = col;
-  }
-  // toFile(w, h , maxiter, map, "map", true);
+  __m256 pcs = _mm256_setr_ps(0.0, 0.1, 0.15, 0.2, 0.3, 0.4, 0.8, 1.0);
+  __m256 red = _mm256_set1_ps(1275);
+  red = _mm256_mul_ps(red, pcs);
+  __m256i red_int = _mm256_cvtps_epi32(red);
+  red_int = _mm256_slli_epi32(red_int, 16);
+  // __m256i reds = red(pcs);
+  inspect(red);
+  inspectc(red_int);
+
+  std::cout << std::hex << (0xff000000 | calcRed(0.0)<<16) << " "
+            << std::hex << (0xff000000 | calcRed(0.1)<<16) << " "
+            << std::hex << (0xff000000 | calcRed(0.15)<<16) << " "
+            << std::hex << (0xff000000 | calcRed(0.2)<<16) << " "
+            << std::hex << (0xff000000 | calcRed(0.3)<<16) << " "
+            << std::hex << (0xff000000 | calcRed(0.4)<<16) << " "
+            << std::hex << (0xff000000 | calcRed(0.8)<<16) << " "
+            << std::hex << (0xff000000 | calcRed(1.0)<<16) << std::endl;
+  // toF  ile(w, h , maxiter, map, "map", true);
   // toFileColor(w, h , maxiter, map, "map_color", true);
   // int col = 0xff000000;
   // int r = 210;

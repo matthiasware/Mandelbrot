@@ -7,6 +7,7 @@
 #include <immintrin.h>
 #include <cassert>
 #include <math.h>
+#include "avx_mathfun.h"
 
 // https://de.wikipedia.org/wiki/Portable_Anymap#Pixmap
 
@@ -53,6 +54,102 @@ inline int calcMandelbrot(double c_re, double c_im, int maxiter)
 	}
 	return i;
 }
+
+/*
+================= COLORING =================
+Requirements:
+	black: 0   iterations
+	white: max iterations
+	anything in between should be assigned a unique color
+
+Giveen is 'n', the number of iterations needed:
+We want a percentage for simpler color mapping:
+pc = n / maxiter
+
+red   =  min(255, (255/0.2)*pc) => peaks at 0.3 at max value 255
+green =  pc * 255.0 => steadily increasing
+blue  =  127*(sin(3pi*pc + pi/2) + 1)
+
+#define CACHE_LINE_SIZE sysconf(_SC_LEVEL1_DCACHE_LINESIZE) 
+
+*/
+int colorMap(const int w, const int h, const int maxiter, int *map)
+{
+  for(int i=0; i<w*h; i++)
+  {
+    int *val = &map[i];
+    double pc = ((double) *val) / maxiter;
+
+    int r = std::min(255, static_cast<int>(pc * 1275));
+    int g = static_cast<int>(pc * 255.0);
+    int b = static_cast<int>(127.0*(sin( -M_PI*3*pc  -M_PI * .5) + 1));
+    *val =  0xff000000 | r<<16 | g<<8 | b;
+  }
+}
+
+int colorMap_omp(const int w, const int h, const int maxiter, int *map)
+{
+	#pragma omp parallel for schedule(static)
+  for(int i=0; i<w*h; i++)
+  {
+  	int *val = &map[i];
+    double pc = ((double) *val) / maxiter;
+
+    int r = std::min(255, static_cast<int>(pc * 1275));
+    int g = static_cast<int>(pc * 255.0);
+    int b = static_cast<int>(127.0*(sin( -M_PI*3*pc  -M_PI * .5) + 1));
+    int col = 0xff000000 | r<<16 | g<<8 | b;
+    *val = col;
+  }
+}
+
+__m256i calcRed(__m256 pcs)
+{
+  __m256 red = _mm256_set1_ps(1275);
+  red = _mm256_mul_ps(red, pcs);
+  red = _mm256_floor_ps(red);
+  __m256i red_int = _mm256_cvtps_epi32(red);
+  red_int = _mm256_slli_epi32(red_int, 16);
+  return red_int;
+}
+
+int colorMap_avx(const int w, const int h, const int maxiter, int *map)
+{
+	__m256 maxiter_ps = _mm256_set1_ps(maxiter);
+	__m256i mask =  _mm256_setr_epi32(-1, -1, -1, -1, -1, -1, -1, -1);
+	__m256 c256 = _mm256_set1_ps(255);
+	__m256 cPI  = _mm256_set1_ps(M_PI);
+	__m256i colorTemp = _mm256_set1_epi32(0xff000000);
+
+  for(int i=0; i<w*h; i+=8)
+  {
+  	__m256 values = _mm256_setr_ps(map[i], map[i+1], map[i+2], map[i+3], map[i+4], map[i+5], map[i+6], map[i+7]);
+  	__m256 pcs = _mm256_div_ps(values, maxiter_ps);
+
+  	// calc red
+	  __m256i red = calcRed(pcs);
+
+	  // green
+	  __m256 green = _mm256_mul_ps(pcs, c256);
+	  __m256i green_int = _mm256_castps_si256(green);
+	  green_int = _mm256_slli_epi32(green_int, 8);
+
+	  // blue
+	  __m256 blue = _mm256_set1_ps(-M_PI * 3);
+	  blue = _mm256_add_ps(blue, pcs);
+	  blue = _mm256_sub_ps(blue, _mm256_set1_ps(-M_PI * 0.5));
+	  blue = sin256_ps(blue);
+	  blue = _mm256_add_ps(blue, _mm256_set1_ps(1));
+	  blue = _mm256_mul_ps(blue, _mm256_set1_ps(127));
+	  __m256i blue_int = _mm256_castps_si256(blue);
+
+	 blue_int = _mm256_or_si256(blue_int, colorTemp);
+	 red = _mm256_or_si256(red, green_int);
+	 __m256i result = _mm256_or_si256(blue_int, red);
+	 _mm256_store_si256 ((__m256i *) &map[i], result);
+  }
+}
+
 
 void mandelbrot_col(int w, int h, int maxiter,
 			 double re_min, double re_max,
@@ -209,6 +306,14 @@ void inspect(__m256d &v)
 {
   double *d = (double *) &v;
   std::cout << d[0] << " " << d[1]  << " " << d[2] << " " << d[3] << std::endl;
+}
+
+void inspect(__m256 &v)
+{
+  float *d = (float *) &v;
+  std::cout << d[0] << " " << d[1]  << " " << d[2] << " " << d[3] << " "
+            << d[4] << " " << d[5]  << " " << d[6] << " " << d[7] 
+            << std::endl;
 }
 
 void inspect(__m256i &v)

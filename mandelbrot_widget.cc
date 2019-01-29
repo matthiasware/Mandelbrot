@@ -234,19 +234,6 @@ void CompositionWidget::applyMove(CompositionWidget::MoveDirection direction)
 // 	return img;
 // }
 
-int red(double pc)
-{
-  return (int) std::min(255.0, pc * 255/0.2);
-}
-int green(double pc)
-{
-  return pc * 255.0;
-}
-int blue(double pc)
-{
-  return (int) (255/2 + 1)*sin(pc*3*3.141592653589793 - 1.5) + (255/2 + 1);
-}
-
 QImage MandelbrotViewer::mandelbrot() const
 {
 	int w = width();
@@ -257,18 +244,7 @@ QImage MandelbrotViewer::mandelbrot() const
 	int *map = reinterpret_cast<int*>(img.bits()); // is 32 bit aligned
 
 	mandelbrot_avx_omp(w, h, maxiter_, re_min_, re_max_, im_min_, im_max_, map);
-
-	for(int i=0; i<w*h; i++)
-	{
-		int val = map[i];
-		double pc = ((double) val) / maxiter_;
-
-		int r =(int) std::min(255, (int) (pc * 1275)); // 1275 = 255*5 = 255 / 0.2
-		int g = (int) pc * 255.0;
-		int b = (int) (127)*(sin( -3.14159263589793 * ( 3 * pc + .5)) + 1);
-		int col = 0xff000000 | r<<16 | g<<8 | b;
-		map[i] = col;
-	}
+	colorMap(w, h, maxiter_, map);
 	return img;
 }
 
