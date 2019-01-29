@@ -114,7 +114,6 @@ void CompositionWidget::submitConfiguration()
 	im_min_ = edit_im_min->value();
 	viewer->setFocus();
 	updateViewer();
-
 }
 
 void MandelbrotViewer::updateValues(int maxiter,
@@ -210,30 +209,6 @@ void CompositionWidget::applyMove(CompositionWidget::MoveDirection direction)
 	updateViewer();
 }
 
-// QImage MandelbrotViewer::mandelbrot() const
-// {
-// 	int w = width();
-// 	int h = height();
-
-// 	QImage img(w, h, QImage::Format_RGB888);
-
-
-// 	double ref = ((re_max_ - re_min_) / (w - 1));
-// 	double imf =  ((im_max_ - im_min_) / (h - 1));
-// 	int n = 0;
-// 	for(int x=0; x<w; x++)
-// 	{
-// 		double c_re = re_min_ + x * ref;
-// 		for(int y=0; y<h; y++)
-// 		{
-// 			double c_im = im_max_ - y * imf;
-// 			n = calcMandelbrot(c_re, c_im, maxiter_);
-// 			img.setPixelColor(x, y, getColor(n));
-// 		}
-// 	}
-// 	return img;
-// }
-
 QImage MandelbrotViewer::mandelbrot() const
 {
 	int w = width();
@@ -244,42 +219,9 @@ QImage MandelbrotViewer::mandelbrot() const
 	int *map = reinterpret_cast<int*>(img.bits()); // is 32 bit aligned
 
 	mandelbrot_avx_omp(w, h, maxiter_, re_min_, re_max_, im_min_, im_max_, map);
-	colorMap(w, h, maxiter_, map);
+	colorMap_omp(w, h, maxiter_, map);
 	return img;
 }
-
-// QImage MandelbrotViewer::mandelbrot() const
-// {
-// 	int w = width();
-// 	int h = height();
-
-// 	QImage img(w, h, QImage::Format_RGB888);
-
-
-// 	double ref = ((re_max_ - re_min_) / (w - 1));
-// 	double imf =  ((im_max_ - im_min_) / (h - 1));
-// 	int n = 0;
-// 	double c_re = re_min_;
-// 	for(int x=0; x<w; ++x)
-// 	{
-// 		std::cout << std::setprecision(10) << c_re << std::endl;
-// 		// double c_re = re_min_ + x * ref;
-// 		// std::cout <<  x << ": " << c_re << ":" <<  ref << std::endl;
-// 		for(int y=0; y<h; y++)
-// 		{
-// 			double c_im = im_max_ - y * imf;
-// 			n = calcMandelbrot2(c_re, c_im, maxiter_);
-// 			img.setPixelColor(x, y, getColor(n));
-// 		}
-// 		c_re = c_re + ref;
-// 		std::cout << std::setprecision(10) << c_re << std::endl;
-// 		if(x%10 == 0)
-// 		{
-// 			return img;
-// 		}
-// 	}
-// 	return img;
-// }
 
 QColor MandelbrotViewer::getColor(int iteration) const
 {

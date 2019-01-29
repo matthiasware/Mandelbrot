@@ -31,6 +31,6 @@ target_compile_options(bench PRIVATE -march=native)
 
 
 # https://github.com/magic-sph/magic/blob/master/cmake/FindSSE.cmake
-add_executable(google google.cc mandelbrot.h)
-target_link_libraries(google PRIVATE ${OpenMP_CXX_FLAGS})
-target_compile_options(google PRIVATE -march=native)
+add_executable(bmpcreator bmpcreator.cc mandelbrot.h)
+target_link_libraries(bmpcreator PRIVATE ${OpenMP_CXX_FLAGS})
+target_compile_options(bmpcreator PRIVATE -march=native)
