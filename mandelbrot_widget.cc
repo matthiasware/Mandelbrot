@@ -54,7 +54,7 @@ CompositionWidget::CompositionWidget(QWidget *parent) : QWidget(parent)
 
 	edit_maxiter = new QSpinBox(inputGroup);
 	edit_maxiter->setRange(10, 1'000'000);
-	edit_maxiter->setValue(50);
+	edit_maxiter->setValue(500);
 
 	edit_zoom = makeQDoubleSpinBox(-10, 10, 2, 0.7, inputGroup);
 	edit_move = makeQDoubleSpinBox(0, 100, 2 ,0.1, inputGroup);
@@ -263,9 +263,9 @@ QImage MandelbrotViewer::mandelbrot() const
 		int val = map[i];
 		double pc = ((double) val) / maxiter_;
 
-		int r =(int) std::min(255.0, pc * 1275); // 1275 = 255*5 = 255 / 0.2
+		int r =(int) std::min(255, (int) (pc * 1275)); // 1275 = 255*5 = 255 / 0.2
 		int g = (int) pc * 255.0;
-		int b = (int) (255/2 + 1)*sin(pc*3*3.141592653589793 - 1.5) + (255/2 + 1);
+		int b = (int) (127)*(sin( -3.14159263589793 * ( 3 * pc + .5)) + 1);
 		int col = 0xff000000 | r<<16 | g<<8 | b;
 		map[i] = col;
 	}
