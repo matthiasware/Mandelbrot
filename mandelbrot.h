@@ -7,6 +7,7 @@
 #include <immintrin.h>
 #include <cassert>
 #include <math.h>
+#include <cstdint>
 #include "avx_mathfun.h"
 
 // https://de.wikipedia.org/wiki/Portable_Anymap#Pixmap
@@ -72,21 +73,39 @@ blue  =  127*(sin(3pi*pc + pi/2) + 1)
 #define CACHE_LINE_SIZE sysconf(_SC_LEVEL1_DCACHE_LINESIZE) 
 
 */
-int colorMap(const int w, const int h, const int maxiter, int *map)
+
+struct RGBFORM 
+{
+  static const uint8_t RGBA = 0b11'10'01'00;
+  static const uint8_t ARGB = 0b10'01'00'11;
+  static const uint8_t BGRA = 0b01'10'11'00;
+  static const uint8_t ABGR = 0b00'01'10'11;
+};
+
+inline int formatColor(int r, int g, int b, int a, uint8_t mask)
+{
+  r = r << (((mask & 0b11000000)>>6)*8);
+  g = g << (((mask & 0b00110000)>>4)*8);
+  b = b << (((mask & 0b00001100)>>2)*8);
+  a = a << (((mask & 0b00000011)>>0)*8);
+  return (r | g | b | a);
+}
+int colorMap(const int w, const int h, const int maxiter, int *map, uint8_t mask)
 {
   for(int i=0; i<w*h; i++)
   {
     int *val = &map[i];
     double pc = ((double) *val) / maxiter;
 
-    int r = std::min(255, static_cast<int>(pc * 1275));
+    int b = std::min(255, static_cast<int>(pc * 1275));
     int g = static_cast<int>(pc * 255.0);
-    int b = static_cast<int>(127.0*(sin( -M_PI*3*pc  -M_PI * .5) + 1));
-    *val =  0xff000000 | r<<16 | g<<8 | b;
+    int r = static_cast<int>(127.0*(sin( -M_PI*3*pc  -M_PI * .5) + 1));
+    // *val =  0xff000000 | r<<16 | g<<8 | b;
+    *val = formatColor(r, g, b, 0xff, mask);
   }
 }
 
-int colorMap_omp(const int w, const int h, const int maxiter, int *map)
+int colorMap_omp(const int w, const int h, const int maxiter, int *map, uint8_t mask)
 {
 	#pragma omp parallel for schedule(static)
   for(int i=0; i<w*h; i++)
@@ -94,11 +113,11 @@ int colorMap_omp(const int w, const int h, const int maxiter, int *map)
   	int *val = &map[i];
     double pc = ((double) *val) / maxiter;
 
-    int r = std::min(255, static_cast<int>(pc * 1275));
+    int b = std::min(255, static_cast<int>(pc * 1275));
     int g = static_cast<int>(pc * 255.0);
-    int b = static_cast<int>(127.0*(sin( -M_PI*3*pc  -M_PI * .5) + 1));
-    int col = 0xff000000 | r<<16 | g<<8 | b;
-    *val = col;
+    int r = static_cast<int>(127.0*(sin( -M_PI*3*pc  -M_PI * .5) + 1));
+    // *val = 0xff000000 | r<<16 | g<<8 | b;
+    *val = formatColor(r, g, b, 0xff, mask);;
   }
 }
 

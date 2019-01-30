@@ -69,6 +69,10 @@ private:
 	QDoubleSpinBox *edit_im_min;
 	QPushButton *submitButton;
 
+	QSpinBox *edit_img_width;
+	QSpinBox *edit_img_height;
+	QPushButton *saveImgButton;
+
 	int maxiter_;
 	double zoom_;
 	double move_;

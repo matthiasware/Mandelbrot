@@ -55,7 +55,7 @@ static void BM_colorMap(benchmark::State &state)  {
   int *map = (int*)aligned_alloc(32, h*w * sizeof(int));
   mandelbrot_avx_omp(w, h, maxiter, re_min, re_max, im_min, im_max, map);
   for (auto _ : state) {
-    colorMap(w, h, maxiter, map);
+    colorMap(w, h, maxiter, map, RGBFORM::ARGB);
   }
   // toFile(w, h, maxiter, map, "mb_avx_omp", true);
 }
@@ -66,7 +66,7 @@ static void BM_colorMap_omp(benchmark::State &state)  {
   int *map = (int*)aligned_alloc(32, h*w * sizeof(int));
   mandelbrot_avx_omp(w, h, maxiter, re_min, re_max, im_min, im_max, map);
   for (auto _ : state) {
-    colorMap_omp(w, h, maxiter, map);
+    colorMap_omp(w, h, maxiter, map, RGBFORM::ARGB);
   }
   // toFile(w, h, maxiter, map, "mb_avx_omp", true);
 }

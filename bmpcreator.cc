@@ -39,39 +39,18 @@ void inspect(__m128i &v)
   std::cout << d[0] << " " << d[1]  << " " << d[2] << " " << d[3] << std::endl;
 }
 
-/*
---width int
---height int
---maxiter int
---name str
---imin double
---imax double
---rmin double
---rmax double
-*/
 
-// int parseArg(char * c)
-// {
-//   return atoi(c);
-// }
-// double parseArg(char *)
-// {
-
-// }
-// std::string parseArg(char[])
-// {
-
-// }
 int main(int argc, char** argv) {
 
   // default values
-  int w = 6000;
-  int h = 4800;
-  int maxiter = 2000;
+  int w = 3000;
+  int h = 2400;
+  int maxiter = 500;
   double re_min = -2;
   double re_max = 1;
   double im_min = -1.2;
   double im_max = 1.2;
+
   std::string name = "mandelbrot.png";
 
   std::string usage =  "Usage: ./bmcreator\n"
@@ -135,7 +114,7 @@ int main(int argc, char** argv) {
   }
   int* map = (int*)aligned_alloc(32, h*w * sizeof(int));
   mandelbrot_avx(w, h, maxiter, re_min, re_max, im_min, im_max, map);
-  colorMap_omp(w, h, maxiter, map);
+  colorMap_omp(w, h, maxiter, map, RGBFORM::ABGR);
   int r = stbi_write_png(name.c_str(), w, h, 4, (void *) map, 4*w);
   if(r == 0)
   {

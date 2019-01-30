@@ -65,6 +65,15 @@ CompositionWidget::CompositionWidget(QWidget *parent) : QWidget(parent)
 
 	submitButton = new QPushButton(tr("Submit"), configGroup);
 
+	saveImgButton = new QPushButton(tr("Save Image"));
+	edit_img_width = new QSpinBox();
+	edit_img_width->setRange(10, 1'000'000);
+	edit_img_width->setValue(2400);
+
+	edit_img_height = new QSpinBox();
+	edit_img_height->setRange(10, 1'000'000);
+	edit_img_height->setValue(2400);
+
 	// MAIN LAYOUT
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
     mainLayout->addWidget(viewer);
@@ -219,7 +228,7 @@ QImage MandelbrotViewer::mandelbrot() const
 	int *map = reinterpret_cast<int*>(img.bits()); // is 32 bit aligned
 
 	mandelbrot_avx_omp(w, h, maxiter_, re_min_, re_max_, im_min_, im_max_, map);
-	colorMap_omp(w, h, maxiter_, map);
+	colorMap_omp(w, h, maxiter_, map, RGBFORM::ARGB);
 	return img;
 }
 

@@ -34,3 +34,8 @@ target_compile_options(bench PRIVATE -march=native)
 add_executable(bmpcreator bmpcreator.cc mandelbrot.h stb_image_write.h)
 target_link_libraries(bmpcreator PRIVATE ${OpenMP_CXX_FLAGS})
 target_compile_options(bmpcreator PRIVATE -march=native)
+
+
+add_executable(test test.cc mandelbrot.h stb_image_write.h)
+target_link_libraries(test PRIVATE ${OpenMP_CXX_FLAGS})
+target_compile_options(test PRIVATE -march=native)
