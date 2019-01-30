@@ -19,6 +19,10 @@
 #include "mandelbrot.h"
 #include<iostream>
 #include <math.h>
+#include<QFileDialog>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 
 MandelbrotViewer::MandelbrotViewer(QWidget *parent) : QWidget(parent)
@@ -52,6 +56,9 @@ CompositionWidget::CompositionWidget(QWidget *parent) : QWidget(parent)
 	QGroupBox *inputGroup = new QGroupBox(configGroup);
 	inputGroup->setTitle("Input");
 
+	QGroupBox *saveImgGroup = new QGroupBox(configGroup);
+	saveImgGroup->setTitle("Save Image");
+
 	edit_maxiter = new QSpinBox(inputGroup);
 	edit_maxiter->setRange(10, 1'000'000);
 	edit_maxiter->setValue(500);
@@ -65,12 +72,12 @@ CompositionWidget::CompositionWidget(QWidget *parent) : QWidget(parent)
 
 	submitButton = new QPushButton(tr("Submit"), configGroup);
 
-	saveImgButton = new QPushButton(tr("Save Image"));
-	edit_img_width = new QSpinBox();
+	saveImgButton = new QPushButton(tr("Save Image"), saveImgGroup);
+	edit_img_width = new QSpinBox(saveImgGroup);
 	edit_img_width->setRange(10, 1'000'000);
-	edit_img_width->setValue(2400);
+	edit_img_width->setValue(3000);
 
-	edit_img_height = new QSpinBox();
+	edit_img_height = new QSpinBox(saveImgGroup);
 	edit_img_height->setRange(10, 1'000'000);
 	edit_img_height->setValue(2400);
 
@@ -83,6 +90,8 @@ CompositionWidget::CompositionWidget(QWidget *parent) : QWidget(parent)
     QVBoxLayout *configLayout = new QVBoxLayout(configGroup);
     configLayout->addWidget(inputGroup);
     configLayout->addWidget(submitButton);
+    configLayout->addWidget(saveImgGroup);
+    configLayout->addWidget(saveImgButton);
     configLayout->setSizeConstraint(QLayout::SetFixedSize);
 
     // INPUT LAYOUT
@@ -95,8 +104,15 @@ CompositionWidget::CompositionWidget(QWidget *parent) : QWidget(parent)
     inputLayout->addRow(new QLabel(tr("im_max:")), edit_im_max);
     inputLayout->addRow(new QLabel(tr("im_min:")), edit_im_min);
 
+	// SAVE IMG LAYOUT
+    QFormLayout *imgSaveLayout = new QFormLayout(saveImgGroup);
+    imgSaveLayout->addRow(new QLabel(tr("Width:")), edit_img_width);
+    imgSaveLayout->addRow(new QLabel(tr("Height:")), edit_img_height);
+    
     connect(submitButton,
     		SIGNAL(clicked()), this, SLOT(submitConfiguration()));
+    connect(saveImgButton,
+    	    SIGNAL(clicked()), this, SLOT(saveImage()));
     submitConfiguration();
 }
 
@@ -123,6 +139,23 @@ void CompositionWidget::submitConfiguration()
 	im_min_ = edit_im_min->value();
 	viewer->setFocus();
 	updateViewer();
+}
+
+void CompositionWidget::saveImage()
+{
+	int w = edit_img_width->value();
+	int h = edit_img_height->value();
+	// because otherwise we get segfaults from AVX ;)
+	w = w + w % 4; 
+
+	int* map = (int*)aligned_alloc(32, h*w * sizeof(int));
+	mandelbrot_avx(w, h, maxiter_, re_min_, re_max_,
+		           im_min_, im_max_, map);
+	colorMap_omp(w, h, maxiter_, map, RGBFORM::ABGR);
+	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+                           "untitled.png",
+                           tr("Images (*.png *.xpm *.jpg)"));
+	int r = stbi_write_png(fileName.toLatin1().data(), w, h, 4, (void *) map, 4*w);
 }
 
 void MandelbrotViewer::updateValues(int maxiter,

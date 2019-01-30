@@ -51,6 +51,7 @@ public:
 
 public slots:
 	void submitConfiguration();
+	void saveImage();
 
 protected:
 	void keyPressEvent(QKeyEvent *event) override;

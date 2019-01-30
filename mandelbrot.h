@@ -10,6 +10,7 @@
 #include <cstdint>
 #include "avx_mathfun.h"
 
+
 // https://de.wikipedia.org/wiki/Portable_Anymap#Pixmap
 void toFile(int w, int h, int maxiter,
 	        int *map, std::string fileName,
