@@ -6,6 +6,9 @@
 #include <math.h>
 #include <cstring>
 #include <stdlib.h>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 //  https://software.intel.com/sites/landingpage/IntrinsicsGuide/#techs=AVX,AVX2&cats=Store&expand=3525
 
 void inspect(__m256d &v)
@@ -46,17 +49,30 @@ void inspect(__m128i &v)
 --rmin double
 --rmax double
 */
+
+// int parseArg(char * c)
+// {
+//   return atoi(c);
+// }
+// double parseArg(char *)
+// {
+
+// }
+// std::string parseArg(char[])
+// {
+
+// }
 int main(int argc, char** argv) {
 
   // default values
-  int w = 10;
-  int h = 20;
-  int maxiter = 30;
-  double re_min = 40;
-  double re_max = 50;
-  double im_min = 60;
-  double im_max = 70;
-  std::string name = "mandelbrot";
+  int w = 6000;
+  int h = 4800;
+  int maxiter = 2000;
+  double re_min = -2;
+  double re_max = 1;
+  double im_min = -1.2;
+  double im_max = 1.2;
+  std::string name = "mandelbrot.png";
 
   std::string usage =  "Usage: ./bmcreator\n"
                        "\t --name <outfile>\n"
@@ -112,17 +128,17 @@ int main(int argc, char** argv) {
       return 0;
     }
   }
-  // int w = 40;
-  // int h = 10;
-  // int maxiter = 1000;
-  // double re_min = -2;
-  // double re_max = 1;
-  // double im_min = -1.5;
-  // double im_max = 1.5;
-
-  // int* map_work = (int*)aligned_alloc(32, h*w * sizeof(int));
-  // int* map_test = (int*)aligned_alloc(32, h*w * sizeof(int));
-  // mandelbrot_avx(w, h, maxiter, re_min, re_max, im_min, im_max, map_work);
-  // std::memcpy(map_test, map_work, w*h*sizeof(int));
-  // colorMap(w, h, maxiter, map_work);
+  if(w % 4 != 0)
+  {
+    std::cout << "<width> must be multiple of 4" << std::endl;
+    return 0;
+  }
+  int* map = (int*)aligned_alloc(32, h*w * sizeof(int));
+  mandelbrot_avx(w, h, maxiter, re_min, re_max, im_min, im_max, map);
+  colorMap_omp(w, h, maxiter, map);
+  int r = stbi_write_png(name.c_str(), w, h, 4, (void *) map, 4*w);
+  if(r == 0)
+  {
+    std::cout << "Could not write image" << std::endl;
+  }
 }
