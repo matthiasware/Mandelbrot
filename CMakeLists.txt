@@ -1,41 +1,26 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.4)
 project(qt-tutorial LANGUAGES CXX)
 
 set(CMAKE_BUILD_TYPE "Release")
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(OpenMP REQUIRED)
 
+######################################
+# 				MAIN
+######################################
 add_executable(main main.cc mandelbrot_widget.cc mandelbrot.h)
-target_compile_features(main PRIVATE cxx_std_14)
+
 target_link_libraries(main PRIVATE Qt5::Widgets)
+target_link_libraries(main PRIVATE OpenMP::OpenMP_CXX)
 set_target_properties(main PROPERTIES AUTOMOC TRUE)
 target_compile_options(main PRIVATE -march=native)
 
-
-
-find_package(OpenMP REQUIRED)
-
-if (OPENMP_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-endif()
 
 find_package(benchmark REQUIRED)
 find_package(Threads REQUIRED)
 
 add_executable(bench mandelbench.cc mandelbrot.h)
 target_link_libraries(bench PRIVATE Threads::Threads benchmark)
-target_link_libraries(bench PRIVATE ${OpenMP_CXX_FLAGS})
+target_link_libraries(bench PUBLIC OpenMP::OpenMP_CXX)
 target_compile_options(bench PRIVATE -march=native)
-
-
-# https://github.com/magic-sph/magic/blob/master/cmake/FindSSE.cmake
-add_executable(bmpcreator bmpcreator.cc mandelbrot.h stb_image_write.h)
-target_link_libraries(bmpcreator PRIVATE ${OpenMP_CXX_FLAGS})
-target_compile_options(bmpcreator PRIVATE -march=native)
-
-
-add_executable(test test.cc mandelbrot.h stb_image_write.h)
-target_link_libraries(test PRIVATE ${OpenMP_CXX_FLAGS})
-target_compile_options(test PRIVATE -march=native)

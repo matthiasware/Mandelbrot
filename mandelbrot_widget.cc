@@ -156,6 +156,7 @@ void CompositionWidget::saveImage()
                            "untitled.png",
                            tr("Images (*.png *.xpm *.jpg)"));
 	int r = stbi_write_png(fileName.toLatin1().data(), w, h, 4, (void *) map, 4*w);
+	free(map);
 }
 
 void MandelbrotViewer::updateValues(int maxiter,

@@ -120,4 +120,5 @@ int main(int argc, char** argv) {
   {
     std::cout << "Could not write image" << std::endl;
   }
+  free(map);
 }
