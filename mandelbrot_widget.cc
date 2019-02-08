@@ -16,13 +16,12 @@
 #include<QPainter>
 #include<QImage>
 #include<QLabel>
-#include "mandelbrot.h"
+#include "mandelbrot/mandelbrot.h"
 #include<iostream>
 #include <math.h>
 #include<QFileDialog>
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "imgwrite/imgwrite.h"
 
 
 MandelbrotViewer::MandelbrotViewer(QWidget *parent) : QWidget(parent)
@@ -149,13 +148,13 @@ void CompositionWidget::saveImage()
 	w = w + w % 4; 
 
 	int* map = (int*)aligned_alloc(32, h*w * sizeof(int));
-	mandelbrot_avx(w, h, maxiter_, re_min_, re_max_,
+	MANDELBROT(w, h, maxiter_, re_min_, re_max_,
 		           im_min_, im_max_, map);
-	colorMap_omp(w, h, maxiter_, map, RGBFORM::ABGR);
+	COLORMAP(w, h, maxiter_, map, RGBFORM::ABGR);
 	QString fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
                            "untitled.png",
                            tr("Images (*.png *.xpm *.jpg)"));
-	int r = stbi_write_png(fileName.toLatin1().data(), w, h, 4, (void *) map, 4*w);
+	int r = write_png(fileName.toLatin1().data(), w, h, 4, (void *) map, 4*w);
 	free(map);
 }
 

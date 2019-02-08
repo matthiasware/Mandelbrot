@@ -1,44 +1,12 @@
-#include "mandelbrot.h"
-#include <immintrin.h>
+#include "mandelbrot/mandelbrot.h"
 #include <cassert>
 #include <iostream>
 #include <iomanip>
 #include <math.h>
 #include <cstring>
 #include <stdlib.h>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
 
-//  https://software.intel.com/sites/landingpage/IntrinsicsGuide/#techs=AVX,AVX2&cats=Store&expand=3525
-
-void inspect(__m256d &v)
-{
-  double *d = (double *) &v;
-  std::cout << d[0] << " " << d[1]  << " " << d[2] << " " << d[3] << std::endl;
-}
-
-void inspect(__m256 &v)
-{
-  float *d = (float *) &v;
-  std::cout << d[0] << " " << d[1]  << " " << d[2] << " " << d[3] << " "
-            << d[4] << " " << d[5]  << " " << d[6] << " " << d[7] 
-            << std::endl;
-}
-
-void inspect(__m256i &v)
-{
-  int *d = (int *) &v;
-  std::cout << d[0] << " " << d[1]  << " " << d[2] << " " << d[3] << " "
-            << d[4] << " " << d[5]  << " " << d[6] << " " << d[7] 
-            << std::endl;
-}
-
-void inspect(__m128i &v)
-{
-  int *d = (int *) &v;
-  std::cout << d[0] << " " << d[1]  << " " << d[2] << " " << d[3] << std::endl;
-}
-
+#include "imgwrite/imgwrite.h"
 
 int main(int argc, char** argv) {
 
@@ -113,9 +81,9 @@ int main(int argc, char** argv) {
     return 0;
   }
   int* map = (int*)aligned_alloc(32, h*w * sizeof(int));
-  mandelbrot_avx(w, h, maxiter, re_min, re_max, im_min, im_max, map);
-  colorMap_omp(w, h, maxiter, map, RGBFORM::ABGR);
-  int r = stbi_write_png(name.c_str(), w, h, 4, (void *) map, 4*w);
+  MANDELBROT(w, h, maxiter, re_min, re_max, im_min, im_max, map);
+  COLORMAP(w, h, maxiter, map, RGBFORM::ABGR);
+  int r = write_png(name.c_str(), w, h, 4, (void *) map, 4*w);
   if(r == 0)
   {
     std::cout << "Could not write image" << std::endl;

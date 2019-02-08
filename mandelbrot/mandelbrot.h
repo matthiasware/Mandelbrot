@@ -4,18 +4,24 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <omp.h>
-#include <immintrin.h>
 #include <cassert>
 #include <math.h>
 #include <cstdint>
 
+#if defined _OPENMP
+  #include <omp.h>
+#endif
+
+#if defined __AVX2__
+  #include <immintrin.h>
+#endif
+
 #ifndef MANDELBROT
-  #if defined MANDELBROT_AVX_ && MANDELBROT_OMP_
+  #if defined __AVX2__ && _OPENMP
     #define MANDELBROT mandelbrot_avx_omp
-  #elif defined MANDELBROT_AVX_
+  #elif defined __AVX2__
     #define MANDELBROT mandelbrot_avx
-  #elif defined MANDELBROT_OMP_
+  #elif defined _OPENMP
     #define MANDELBROT mandelbrot_omp
   #else
     #define MANDELBROT mandelbrot
@@ -23,40 +29,12 @@
 #endif
 
 #ifndef COLOR
-  #if defined MANDELBROT_OMP_
-    #define COLOR colorMap_omp
+  #if defined _OPENMP
+    #define COLORMAP colorMap_omp
   #else
-    #define COLOR colorMap
+    #define COLORMAP colorMap
   #endif
 #endif
-
-/*
-see Pixmap:
-https://de.wikipedia.org/wiki/Portable_Anymap#Pixmap
-*/
-void toFile(int w, int h, int maxiter,
-	        int *map, std::string fileName,
-	        bool transpose=false) {
-  if(transpose)
-  {
-  	int tmp = w;
-  	w = h;
-  	h = tmp;
-  }
-  std::ofstream img(fileName + ".ppm");
-  if (!img.is_open()) {
-    std::cout << "Could not open the file";
-    return;
-  }
-  img << "P3\n" << h << " " << w << " 255\n";
-  for (int x = 0; x < w; x++) {
-    for (int y = 0; y < h; y++) {
-      int val = (map[x * h + y] % 255);
-      img << val << ' ' << val << ' ' << val << "\n";
-    }
-  }
-  img.close();
-}
 
 inline int calcMandelbrot(double c_re, double c_im, int maxiter)
 {
@@ -76,6 +54,34 @@ inline int calcMandelbrot(double c_re, double c_im, int maxiter)
 		i++;
 	}
 	return i;
+}
+
+/*
+see Pixmap:
+https://de.wikipedia.org/wiki/Portable_Anymap#Pixmap
+*/
+void toFile(int w, int h, int maxiter,
+          int *map, std::string fileName,
+          bool transpose=false) {
+  if(transpose)
+  {
+    int tmp = w;
+    w = h;
+    h = tmp;
+  }
+  std::ofstream img(fileName + ".ppm");
+  if (!img.is_open()) {
+    std::cout << "Could not open the file";
+    return;
+  }
+  img << "P3\n" << h << " " << w << " 255\n";
+  for (int x = 0; x < w; x++) {
+    for (int y = 0; y < h; y++) {
+      int val = (map[x * h + y] % 255);
+      img << val << ' ' << val << ' ' << val << "\n";
+    }
+  }
+  img.close();
 }
 
 /*
@@ -128,7 +134,7 @@ int colorMap(const int w, const int h, const int maxiter, int *map, uint8_t mask
   }
 }
 
-#if defined MANDELBROT_OMP_
+#if defined _OPENMP
 int colorMap_omp(const int w, const int h, const int maxiter, int *map, uint8_t mask)
 {
 	#pragma omp parallel for schedule(static)
@@ -145,30 +151,6 @@ int colorMap_omp(const int w, const int h, const int maxiter, int *map, uint8_t 
   }
 }
 #endif
-
-void mandelbrot_col(int w, int h, int maxiter,
-			 double re_min, double re_max,
-			 double im_min, double im_max,
-			 int *map)
-{
-	double re_step = ((re_max - re_min) / (w - 1));
-	double im_step = ((im_max - im_min) / (h - 1));
-
-	double c_re = re_min;
-	double c_im = im_max;
-	for(int x=0; x<w; x++)
-	{
-		c_im = im_max;
-		for(int y=0; y<h; y++)
-		{
-			int val = calcMandelbrot(c_re, c_im, maxiter);
-			val += 1 - log(log(sqrt(c_re * c_re + c_im * c_im))) / log(2);
-			map[x*h + y] = val;
-			c_im -= im_step;
-		}
-		c_re += re_step;
-	}
-}
 
 void mandelbrot(int w, int h, int maxiter,
 			 double re_min, double re_max,
@@ -193,7 +175,7 @@ void mandelbrot(int w, int h, int maxiter,
 	}
 }
 
-#if defined MANDELBROT_OMP_
+#if defined _OPENMP
 void mandelbrot_omp(int w, int h, int maxiter,
 			 double re_min, double re_max,
 			 double im_min, double im_max,
@@ -215,7 +197,7 @@ void mandelbrot_omp(int w, int h, int maxiter,
 }
 #endif
 
-#if defined MANDELBROT_AVX_
+#if defined __AVX2__
 inline __m128i _mm256_castpd_epi32(__m256d &x)
 {
   __m256d add = _mm256_set1_pd(6755399441055744.0);
@@ -294,15 +276,7 @@ void mandelbrot_avx(
 }
 #endif
 
-// The double -> int hack
-int doule2int(double d)
-{
-  int i=0;
-  d += 6755399441055744.0;
-    return i = *((int *)(&d));
-}
-
-#if defined MANDELBROT_OMP_ && defined MANDELBROT_AVX_
+#if defined _OPENMP && defined __AVX2__
 void mandelbrot_avx_omp(
 			 int w, int h, int maxiter,
        double re_min, double re_max,
