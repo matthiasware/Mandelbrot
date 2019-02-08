@@ -13,12 +13,6 @@ const double im_max = 1.5;
 // MANDELBROT SET CALCULATIONS
 
 static void BM_mandelbrot(benchmark::State &state) {
-  #if defined __AVX2__
-  std::cout << "\n\n\nAVX \n\n" << std::endl;  
-  #endif
-  #if defined _OPENMP
-  std::cout << "OPENMP" << std::endl;
-  #endif
   int *map = new int[w * h];
   for (auto _ : state) {
     mandelbrot(w, h, maxiter, re_min, re_max, im_min, im_max, map);

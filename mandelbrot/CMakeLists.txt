@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(mandelbrot)
 
-find_package(OpenMP)
-
 add_library(${PROJECT_NAME} INTERFACE)
 
 target_include_directories(
@@ -11,6 +9,7 @@ target_include_directories(
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
 )
 
+find_package(OpenMP)
 IF(OpenMP_FOUND)
 	target_link_libraries(
 		${PROJECT_NAME}
@@ -18,6 +17,7 @@ IF(OpenMP_FOUND)
 		OpenMP::OpenMP_CXX)
 ENDIF()
 
+# for AVX2
 target_compile_options(
 	${PROJECT_NAME}
 	INTERFACE
