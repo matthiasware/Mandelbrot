@@ -15,8 +15,11 @@ target_link_libraries(main PRIVATE Qt5::Widgets)
 target_link_libraries(main PRIVATE OpenMP::OpenMP_CXX)
 set_target_properties(main PROPERTIES AUTOMOC TRUE)
 target_compile_options(main PRIVATE -march=native)
+target_compile_definitions(main PRIVATE FOO=1)
 
-
+######################################
+# 				MAIN
+######################################
 find_package(benchmark REQUIRED)
 find_package(Threads REQUIRED)
 

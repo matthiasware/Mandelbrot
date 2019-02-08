@@ -1,5 +1,6 @@
 #ifndef MANDELBROT_H_
 #define MANDELBROT_H_
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -9,8 +10,30 @@
 #include <math.h>
 #include <cstdint>
 
+#ifndef MANDELBROT
+  #if defined MANDELBROT_AVX_ && MANDELBROT_OMP_
+    #define MANDELBROT mandelbrot_avx_omp
+  #elif defined MANDELBROT_AVX_
+    #define MANDELBROT mandelbrot_avx
+  #elif defined MANDELBROT_OMP_
+    #define MANDELBROT mandelbrot_omp
+  #else
+    #define MANDELBROT mandelbrot
+  #endif
+#endif
 
-// https://de.wikipedia.org/wiki/Portable_Anymap#Pixmap
+#ifndef COLOR
+  #if defined MANDELBROT_OMP_
+    #define COLOR colorMap_omp
+  #else
+    #define COLOR colorMap
+  #endif
+#endif
+
+/*
+see Pixmap:
+https://de.wikipedia.org/wiki/Portable_Anymap#Pixmap
+*/
 void toFile(int w, int h, int maxiter,
 	        int *map, std::string fileName,
 	        bool transpose=false) {
@@ -105,6 +128,7 @@ int colorMap(const int w, const int h, const int maxiter, int *map, uint8_t mask
   }
 }
 
+#if defined MANDELBROT_OMP_
 int colorMap_omp(const int w, const int h, const int maxiter, int *map, uint8_t mask)
 {
 	#pragma omp parallel for schedule(static)
@@ -120,6 +144,7 @@ int colorMap_omp(const int w, const int h, const int maxiter, int *map, uint8_t 
     *val = formatColor(r, g, b, 0xff, mask);;
   }
 }
+#endif
 
 void mandelbrot_col(int w, int h, int maxiter,
 			 double re_min, double re_max,
@@ -168,6 +193,7 @@ void mandelbrot(int w, int h, int maxiter,
 	}
 }
 
+#if defined MANDELBROT_OMP_
 void mandelbrot_omp(int w, int h, int maxiter,
 			 double re_min, double re_max,
 			 double im_min, double im_max,
@@ -187,7 +213,9 @@ void mandelbrot_omp(int w, int h, int maxiter,
 		}
 	}
 }
+#endif
 
+#if defined MANDELBROT_AVX_
 inline __m128i _mm256_castpd_epi32(__m256d &x)
 {
   __m256d add = _mm256_set1_pd(6755399441055744.0);
@@ -264,6 +292,7 @@ void mandelbrot_avx(
     }
   }
 }
+#endif
 
 // The double -> int hack
 int doule2int(double d)
@@ -273,6 +302,7 @@ int doule2int(double d)
     return i = *((int *)(&d));
 }
 
+#if defined MANDELBROT_OMP_ && defined MANDELBROT_AVX_
 void mandelbrot_avx_omp(
 			 int w, int h, int maxiter,
        double re_min, double re_max,
@@ -330,5 +360,5 @@ void mandelbrot_avx_omp(
     }
   }
 }
-
+#endif
 #endif // MANDELBROT_H_

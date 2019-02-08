@@ -2,6 +2,7 @@
 #include <QPalette>
 #include <QStyleFactory>
 #include "mandelbrot_widget.h"
+#include <iostream>
 
 int main(int argc, char** argv){
 	QApplication::setStyle(QStyleFactory::create("Fusion"));
